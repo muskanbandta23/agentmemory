@@ -14,8 +14,12 @@ import {
   getConsolidationIntervalMs,
   isContextInjectionEnabled,
   isDropStaleIndexEnabled,
+  getVectorBackfillMax,
   getAuditRetentionMonths,
   getStateBackend,
+  isSessionSweepEnabled,
+  isGraphCompactOnBootEnabled,
+  getSessionSweepStaleHours,
 } from "./config.js";
 import {
   createProvider,
@@ -28,8 +32,9 @@ import { VectorIndex } from "./state/vector-index.js";
 import { HybridSearch } from "./state/hybrid-search.js";
 import { IndexPersistence } from "./state/index-persistence.js";
 import { SHUTDOWN_FLUSH_TIMEOUT_MS, SHUTDOWN_HARD_EXIT_MS, settleWithin } from "./shutdown.js";
-import { registerPrivacyFunction } from "./functions/privacy.js";
+import { registerPrivacyFunction, withWriteScrubbing } from "./functions/privacy.js";
 import { registerObserveFunction } from "./functions/observe.js";
+import { registerCaptureFunctions } from "./functions/capture.js";
 import { seedViewerStreamTracker } from "./state/viewer-stream.js";
 import { registerImageQuotaCleanup } from "./functions/image-quota-cleanup.js";
 import { registerVisionSearchFunctions } from "./functions/vision-search.js";
@@ -39,6 +44,8 @@ import { registerCompressFunction } from "./functions/compress.js";
 import {
   registerSearchFunction,
   backfillVectors,
+  backfillVectorBacklog,
+  isBm25RebuildIncomplete,
   rebuildKeywordIndex,
   markKeywordRebuildPending,
   getSearchIndex,
@@ -63,12 +70,14 @@ import { registerRelationsFunction } from "./functions/relations.js";
 import { registerTimelineFunction } from "./functions/timeline.js";
 import { registerSmartSearchFunction } from "./functions/smart-search.js";
 import { registerRecentSearchesSweepFunction } from "./functions/recent-searches-sweep.js";
+import { registerSessionSweepFunction } from "./functions/session-sweep.js";
 import { registerProfileFunction } from "./functions/profile.js";
 import { registerAutoForgetFunction } from "./functions/auto-forget.js";
 import { registerExportImportFunction } from "./functions/export-import.js";
 import { registerEnrichFunction } from "./functions/enrich.js";
 import { registerClaudeBridgeFunction } from "./functions/claude-bridge.js";
 import { registerGraphFunction } from "./functions/graph.js";
+import { GRAPH_COMPACT_BOOT_DELAY_MS, runGraphCompactOnBoot, setGraphCompactBootDisabled } from "./functions/graph-compact-boot.js";
 import { registerGraphImportFunction } from "./functions/graph-import.js";
 import { registerConsolidationPipelineFunction } from "./functions/consolidation-pipeline.js";
 import { registerTeamFunction } from "./functions/team.js";
@@ -114,8 +123,9 @@ import { registerHealthMonitor } from "./health/monitor.js";
 import { createStreamRelayProbe } from "./health/stream-relay-probe.js";
 import { initMetrics, OTEL_CONFIG } from "./telemetry/setup.js";
 import { VERSION } from "./version.js";
-import { bootLog } from "./logger.js";
+import { bootLog, bootWarn } from "./logger.js";
 import { runtimeMetadataPath } from "./runtime-paths.js";
+import { ensureServerSecret, explicitSecret, secretFilePath } from "./secret-store.js";
 import { mkdirSync, writeFileSync, unlinkSync } from "node:fs";
 import { dirname } from "node:path";
 
@@ -148,13 +158,6 @@ function hasGetMeter(
   );
 }
 
-// Top-level safety net for iii-engine invocation timeouts (issue #204).
-// Under sustained write load (e.g. Claude Code hooks across many
-// projects) `state::set` can occasionally exceed the SDK's 30s timeout.
-// We don't want one such timeout to terminate the long-lived memory
-// service — the rejection is surfaced to the relevant call site via
-// .catch() where it matters; everything else is logged-and-continued.
-// Throttle logs to avoid spamming on bursts.
 let lastUnhandledLogAt = 0;
 process.on("unhandledRejection", (reason) => {
   const now = Date.now();
@@ -166,6 +169,20 @@ process.on("unhandledRejection", (reason) => {
     r?.code ? `${r.code} ${r.function_id ?? ""} ${r.message ?? ""}`.trim() : reason,
   );
 });
+
+function resolveWorkerSecret(): string {
+  try {
+    const { secret, source } = ensureServerSecret();
+    if (source === "generated") {
+      bootLog(`Generated an API secret at ${secretFilePath()} (mode 0600). Local clients read it automatically.`);
+    }
+    return secret;
+  } catch (err) {
+    throw new Error(
+      `agentmemory could not create its API secret at ${secretFilePath()}: ${err instanceof Error ? err.message : String(err)}. Set AGENTMEMORY_SECRET explicitly or make the directory writable.`,
+    );
+  }
+}
 
 async function main() {
   // Fold ~/.agentmemory/.env into process.env before anything reads config
@@ -206,7 +223,7 @@ async function main() {
   );
   bootLog(`Streams: ws://localhost:${config.streamsPort}`);
 
-  const sdk = registerWorker(config.engineUrl, {
+  const sdk = withWriteScrubbing(registerWorker(config.engineUrl, {
     workerName: "agentmemory",
     invocationTimeoutMs: 180000,
     otel: {
@@ -226,7 +243,7 @@ async function main() {
       language: "node",
       framework: "iii-sdk",
     },
-  });
+  }));
 
   writeWorkerPidfile();
 
@@ -235,7 +252,7 @@ async function main() {
     stateBackend = getStateBackend();
   } catch {}
   const kv = new StateKV(sdk, { backend: stateBackend });
-  const secret = getEnvVar("AGENTMEMORY_SECRET");
+  const secret = resolveWorkerSecret();
   const metricsStore = new MetricsStore(kv);
   const dedupMap = new DedupMap();
 
@@ -252,6 +269,7 @@ async function main() {
 
   registerPrivacyFunction(sdk);
   registerObserveFunction(sdk, kv, dedupMap, config.maxObservationsPerSession);
+  const capture = registerCaptureFunctions(sdk, kv, { restPort: config.restPort });
   registerImageQuotaCleanup(sdk, kv);
   registerVisionSearchFunctions(sdk, kv, imageEmbeddingProvider);
   if (isSlotsEnabled()) {
@@ -280,6 +298,7 @@ async function main() {
   registerPatternsFunction(sdk, kv);
   registerRememberFunction(sdk, kv);
   registerEvictFunction(sdk, kv);
+  registerSessionSweepFunction(sdk, kv);
 
   registerRelationsFunction(sdk, kv);
   registerTimelineFunction(sdk, kv);
@@ -341,7 +360,7 @@ async function main() {
   registerRoutinesFunction(sdk, kv);
   registerSignalsFunction(sdk, kv);
   registerCheckpointsFunction(sdk, kv);
-  registerMeshFunction(sdk, kv, secret);
+  registerMeshFunction(sdk, kv, explicitSecret() || undefined);
   registerBranchAwareFunction(sdk, kv);
   registerFlowCompressFunction(sdk, kv, provider);
   registerSentinelsFunction(sdk, kv);
@@ -491,18 +510,37 @@ async function main() {
     }
   }
 
+  if (vectorIndex && loaded && loaded.state !== "unavailable") {
+    const replay = await indexPersistence.replayPendingLog(embeddingProvider?.dimensions ?? 0);
+    if (replay.entries > 0) {
+      bootLog(
+        `Recovered ${replay.added} vectors and ${replay.removed} removals written after the last index save, without calling the embedding provider` +
+          (replay.skipped > 0 ? ` (${replay.skipped} entries skipped)` : ""),
+      );
+    }
+  }
+
   const auditMigration = startAuditMigration(kv).catch(() => {});
 
   const vectorCountShortfall =
     Boolean(loaded?.vector) &&
     loaded?.expectedCount !== undefined &&
     loaded.vector!.size < loaded.expectedCount;
-  const vectorBackfillSince =
+  let vectorBackfillSince =
     !loaded || loaded.state === "unavailable"
       ? undefined
       : loaded.state === "none" || vectorCountShortfall
         ? null
         : loaded.savedAt;
+  const incrementalBackfill = typeof vectorBackfillSince === "string" && Boolean(vectorIndex && embeddingProvider);
+  if (incrementalBackfill) {
+    const since = vectorBackfillSince as string;
+    const marker = await indexPersistence.readBackfillMarker();
+    if (marker !== null && Date.parse(marker) < Date.parse(since)) vectorBackfillSince = marker;
+    await indexPersistence.markBackfillSince(vectorBackfillSince as string).catch((err) => {
+      bootWarn(`Could not save the vector backfill marker: ${err instanceof Error ? err.message : String(err)}`);
+    });
+  }
   const keywordStart = Date.now();
   try {
     const keyword = await rebuildKeywordIndex(kv, vectorBackfillSince);
@@ -517,7 +555,31 @@ async function main() {
           `(set AGENTMEMORY_VECTOR_BACKFILL=all to opt in). See /agentmemory/status.`,
       );
     }
-    if (keyword.vectorJobs.length > 0) {
+    const backlogScanComplete = !isBm25RebuildIncomplete();
+    if (incrementalBackfill && backlogScanComplete && keyword.vectorJobs.length === 0) {
+      await indexPersistence.clearBackfillMarker().catch(() => {});
+    }
+    if (incrementalBackfill && keyword.vectorJobs.length > 0) {
+      setVectorBackfillState("running");
+      bootLog(
+        `Re-embedding ${keyword.vectorJobs.length} vectors missing since the last index save, ${getVectorBackfillMax()} per batch in the background`,
+      );
+      void backfillVectorBacklog(keyword.vectorJobs)
+        .then(async (result) => {
+          if (result.complete && backlogScanComplete) await indexPersistence.clearBackfillMarker().catch(() => {});
+          setVectorBackfillState(result.complete ? "idle" : "paused");
+          if (result.added > 0) bootLog(`Vector index backfilled: ${result.added} entries`);
+          if (!result.complete) {
+            bootWarn(
+              `Vector backfill stopped with ${result.remaining} documents still missing a vector. They are retried on the next start.`,
+            );
+          }
+        })
+        .catch((err) => {
+          setVectorBackfillState("paused");
+          console.warn(`[agentmemory] Failed to backfill vectors:`, err);
+        });
+    } else if (keyword.vectorJobs.length > 0) {
       setVectorBackfillState("running");
       bootLog(`Backfilling ${keyword.vectorJobs.length} missing vectors in the background`);
       void backfillVectors(keyword.vectorJobs)
@@ -543,11 +605,31 @@ async function main() {
     `Ready. ${embeddingProvider ? "Triple-stream (BM25+Vector+Graph)" : "BM25+Graph"} search active.`,
   );
   bootLog(
-    `REST API: 134 endpoints at http://localhost:${config.restPort}/agentmemory/*`,
+    `REST API: 138 endpoints at http://localhost:${config.restPort}/agentmemory/*`,
   );
   bootLog(
     `MCP surface (opt-in via \`npx @agentmemory/mcp\`): ${getAllTools().length} tools · 6 resources · 3 prompts`,
   );
+
+  void (async () => {
+    try {
+      const drained = await capture.drainLocalSpool();
+      const delivered = drained.reduce((n, r) => n + r.delivered, 0);
+      const duplicates = drained.reduce((n, r) => n + r.duplicates, 0);
+      const remaining = drained.reduce((n, r) => n + r.remaining, 0);
+      if (delivered + duplicates + remaining > 0) {
+        bootLog(`Capture spool: ${delivered} recovered, ${duplicates} already stored, ${remaining} still waiting`);
+      }
+      const swept = await capture.sweep();
+      if (swept.processed > 0) {
+        bootLog(`Capture inbox: ${swept.recovered} of ${swept.processed} unfinished observations stored after restart`);
+      }
+      await capture.prune();
+    } catch (err) {
+      bootWarn(`Capture recovery at boot failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    capture.start();
+  })();
 
   const viewerServer = startViewerServer(
     config.viewerPort,
@@ -556,6 +638,15 @@ async function main() {
     secret,
     config.restPort,
   );
+
+  if (isGraphCompactOnBootEnabled()) {
+    const graphCompactTimer = setTimeout(() => {
+      void runGraphCompactOnBoot(kv, { log: bootLog, warn: bootWarn }).catch(() => {});
+    }, GRAPH_COMPACT_BOOT_DELAY_MS);
+    graphCompactTimer.unref();
+  } else {
+    setGraphCompactBootDisabled();
+  }
 
   const autoForgetIntervalMs = parseInt(process.env.AUTO_FORGET_INTERVAL_MS || "3600000", 10);
   const consolidationIntervalMs = getConsolidationIntervalMs();
@@ -605,10 +696,6 @@ async function main() {
     insightDecayTimer.unref();
   }
 
-  // #771: hourly TTL sweep for the followup-rate diagnostic. The
-  // recent-searches scope only needs the last entry per session;
-  // sweeping anything older than the retention window keeps the scope
-  // from growing unbounded across long-lived deployments.
   const recentSearchesSweepTimer = setInterval(async () => {
     try {
       await sdk.trigger({
@@ -620,6 +707,18 @@ async function main() {
   recentSearchesSweepTimer.unref();
 
   void seedViewerStreamTracker(sdk, { unorderedListing: kv.backend === "redis" }).catch(() => {});
+
+  if (isSessionSweepEnabled()) {
+    const sessionSweepTimer = setInterval(async () => {
+      try {
+        await sdk.trigger({ function_id: "mem::session-sweep", payload: {} });
+      } catch (err) {
+        bootLog(`Session sweep failed: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }, 60 * 60 * 1000);
+    sessionSweepTimer.unref();
+    bootLog(`Session sweep: enabled (hourly, stale after ${getSessionSweepStaleHours()}h)`);
+  }
 
   if (isConsolidationEnabled()) {
     const consolidationTimer = setInterval(async () => {
@@ -643,6 +742,7 @@ async function main() {
     hardExit.unref();
     healthMonitor.stop();
     dedupMap.stop();
+    capture.stop();
     indexPersistence.stop();
     const viewerClosed = new Promise<void>((resolve) =>
       viewerServer.close(() => resolve()),

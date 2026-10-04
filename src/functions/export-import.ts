@@ -1,4 +1,5 @@
 import type { IIIClient } from "iii-sdk";
+import { markCaptureEventDeleted } from "../capture/event-record.js";
 import type {
   Session,
   CompressedObservation,
@@ -40,6 +41,7 @@ import { indexRecords } from "./search.js";
 import { resetLessonIndex } from "./lessons.js";
 import { logger } from "../logger.js";
 import { budgetImportedObservationSources } from "./observation-source-budget.js";
+import { boundRecordSources } from "./graph.js";
 
 // Bounded-concurrency chunk size for the import delete/write loops. A
 // "replace" or "merge" of a large export (up to MAX_TOTAL_OBSERVATIONS,
@@ -336,7 +338,7 @@ export function registerExportImportFunction(sdk: IIIClient, kv: StateKV): void 
           // Collect observation deletes across all sessions, then run them in
           // one bounded pass: a runChunked nested inside a runChunked callback
           // multiplies in-flight deletes to chunk-size squared.
-          const obsDeletes: Array<{ sessionId: string; obsId: string }> = [];
+          const obsDeletes: Array<{ sessionId: string; obsId: string; captureKey?: string }> = [];
           await runChunked(existing, async (session) => {
             await kv.delete(KV.sessions, session.id);
             await removeSessionFromProjectIndex(
@@ -348,10 +350,11 @@ export function registerExportImportFunction(sdk: IIIClient, kv: StateKV): void 
               .list<CompressedObservation>(KV.observations(session.id))
               .catch(() => []);
             for (const o of obs) {
-              obsDeletes.push({ sessionId: session.id, obsId: o.id });
+              obsDeletes.push({ sessionId: session.id, obsId: o.id, captureKey: o.captureKey });
             }
           });
           await runChunked(obsDeletes, async (d) => {
+            await markCaptureEventDeleted(kv, { id: d.obsId, sessionId: d.sessionId, captureKey: d.captureKey });
             await kv.delete(KV.observations(d.sessionId), d.obsId);
             await unindexObservationSession(kv, d.obsId).catch(() => {});
           });
@@ -516,7 +519,7 @@ export function registerExportImportFunction(sdk: IIIClient, kv: StateKV): void 
               const existing = await kv.get(KV.graphNodes, node.id).catch(() => null);
               if (existing) { stats.skipped++; return; }
             }
-            await kv.set(KV.graphNodes, node.id, node);
+            await kv.set(KV.graphNodes, node.id, boundRecordSources(node));
           }),
         );
       }
@@ -527,7 +530,7 @@ export function registerExportImportFunction(sdk: IIIClient, kv: StateKV): void 
               const existing = await kv.get(KV.graphEdges, edge.id).catch(() => null);
               if (existing) { stats.skipped++; return; }
             }
-            await kv.set(KV.graphEdges, edge.id, edge);
+            await kv.set(KV.graphEdges, edge.id, boundRecordSources(edge));
           }),
         );
       }

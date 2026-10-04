@@ -238,6 +238,21 @@ export function getEnvVar(key: string): string | undefined {
   return getMergedEnv()[key];
 }
 
+export function isSessionSweepEnabled(): boolean {
+  return getMergedEnv()["AGENTMEMORY_SESSION_SWEEP_ENABLED"] !== "false";
+}
+
+export function getSessionSweepStaleHours(): number {
+  const raw = getMergedEnv()["AGENTMEMORY_SESSION_SWEEP_STALE_HOURS"];
+  if (!raw || !/^\d+$/.test(raw.trim())) return 24;
+  const parsed = parseInt(raw.trim(), 10);
+  return parsed > 0 ? parsed : 24;
+}
+
+export function isGraphCompactOnBootEnabled(): boolean {
+  return getMergedEnv()["AGENTMEMORY_GRAPH_COMPACT_ON_BOOT"] !== "false";
+}
+
 export function isDropStaleIndexEnabled(): boolean {
   return getMergedEnv()["AGENTMEMORY_DROP_STALE_INDEX"] === "true";
 }
@@ -314,7 +329,7 @@ export function detectEmbeddingProvider(
   if (forced) return forced;
 
   if (source["GEMINI_API_KEY"]) return "gemini";
-  if (source["OPENAI_API_KEY"]) return "openai";
+  if (source["OPENAI_API_KEY"] || source["OPENAI_EMBEDDING_API_KEY"]) return "openai";
   if (source["VOYAGE_API_KEY"]) return "voyage";
   if (source["COHERE_API_KEY"]) return "cohere";
   if (source["OPENROUTER_API_KEY"]) return "openrouter";
@@ -525,6 +540,11 @@ export function getIndexSaveIntervalMs(): number {
     INDEX_SAVE_INTERVAL_DEFAULT_MS,
   );
   return raw > 0 ? raw : INDEX_SAVE_INTERVAL_DEFAULT_MS;
+}
+
+export function getStateSaveIntervalMs(): number | undefined {
+  const raw = safeParseInt(getMergedEnv()["AGENTMEMORY_STATE_SAVE_INTERVAL_MS"], 0);
+  return raw > 0 ? raw : undefined;
 }
 
 export const VECTOR_BUCKET_SIZE_DEFAULT = 500;
