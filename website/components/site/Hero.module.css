@@ -177,6 +177,25 @@
   }
 }
 
+.docs {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  font-size: var(--t-14);
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-decoration-color: var(--line-2);
+  text-underline-offset: 4px;
+  transition: color var(--dur-1) ease, text-decoration-color var(--dur-1) ease;
+}
+
+.docs:hover {
+  color: var(--ink);
+  text-decoration-color: var(--accent);
+}
+
 .star svg {
   flex: none;
 }

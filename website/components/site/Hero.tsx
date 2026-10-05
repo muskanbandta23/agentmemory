@@ -60,10 +60,10 @@ export function Hero() {
                 <span>Star on GitHub</span>
                 <span className={`mono ${s.starCount}`}>{compact(meta.stars)}</span>
               </a>
-              <a className="btn btn-ghost" href="/docs">
-                Read the docs
-              </a>
             </div>
+            <a className={s.docs} href="/docs">
+              Read the docs <span aria-hidden="true">→</span>
+            </a>
           </div>
 
           <dl className={s.facts}>
