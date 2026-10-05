@@ -359,10 +359,22 @@ const CASES: UseCase[] = [
   },
 ];
 
+function PanelBody({ c }: { c: (typeof CASES)[number] }) {
+  return (
+    <>
+      <p className={s.why}>{c.why}</p>
+      <div className={s.stage}>{c.scene()}</div>
+      <div className={s.without}>
+        <span className="mono">without memory</span>
+        <span>{c.without}</span>
+      </div>
+    </>
+  );
+}
+
 export function UseCases() {
   const [active, setActive] = useState(0);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
-  const c = CASES[active];
 
   const onKey = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
     const last = CASES.length - 1;
@@ -408,13 +420,18 @@ export function UseCases() {
           ))}
         </div>
 
-        <div id="uc-panel" role="tabpanel" aria-labelledby={`uc-tab-${c.id}`} className={s.panel} key={c.id}>
-          <p className={s.why}>{c.why}</p>
-          <div className={s.stage}>{c.scene()}</div>
-          <div className={s.without}>
-            <span className="mono">without memory</span>
-            <span>{c.without}</span>
-          </div>
+        <div className={s.panels}>
+          {CASES.map((u, i) =>
+            i === active ? (
+              <div key={u.id} id="uc-panel" role="tabpanel" aria-labelledby={`uc-tab-${u.id}`} className={s.panel}>
+                <PanelBody c={u} />
+              </div>
+            ) : (
+              <div key={`size-${u.id}`} className={`${s.panel} ${s.sizer}`} aria-hidden="true" inert>
+                <PanelBody c={u} />
+              </div>
+            ),
+          )}
         </div>
         <p className={`mono ${s.note}`}>Example sessions. The commands, skills and hooks shown are real.</p>
       </div>

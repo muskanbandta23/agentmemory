@@ -29,12 +29,18 @@
   will-change: opacity, transform;
 }
 
+.side {
+  display: grid;
+  gap: var(--s-5);
+  align-content: center;
+}
+
 .steps {
   list-style: none;
   margin: 0;
   padding: 0 0 0 20px;
   display: grid;
-  gap: var(--s-5);
+  gap: var(--s-3);
   position: relative;
 }
 
@@ -42,6 +48,7 @@
   display: grid;
   grid-template-columns: 28px 1fr;
   gap: var(--s-2);
+  align-items: baseline;
   opacity: 0.32;
   transition: opacity var(--dur-3) var(--ease-out);
 }
@@ -51,21 +58,29 @@
   letter-spacing: -0.01em;
 }
 
-.step p {
-  margin-top: 6px;
+.details {
+  display: grid;
+  padding-left: 56px;
+}
+
+.detail {
+  grid-area: 1 / 1;
   font-size: var(--t-14);
   line-height: 1.55;
   color: var(--muted);
-  max-height: 0;
-  overflow: hidden;
   opacity: 0;
-  transition: max-height var(--dur-3) var(--ease-out), opacity var(--dur-3) var(--ease-out);
+  visibility: hidden;
+  transition: opacity var(--dur-2) var(--ease-out), visibility 0s linear var(--dur-2);
+}
+
+.detailTitle {
+  display: none;
+  color: var(--ink);
 }
 
 .num {
   font-size: var(--t-12);
   color: var(--muted);
-  padding-top: 5px;
 }
 
 .track[data-step="0"] .step[data-i="0"],
@@ -76,13 +91,14 @@
   opacity: 1;
 }
 
-.track[data-step="0"] .step[data-i="0"] p,
-.track[data-step="1"] .step[data-i="1"] p,
-.track[data-step="2"] .step[data-i="2"] p,
-.track[data-step="3"] .step[data-i="3"] p,
-.track[data-step="4"] .step[data-i="4"] p {
-  max-height: 8em;
+.track[data-step="0"] .detail[data-i="0"],
+.track[data-step="1"] .detail[data-i="1"],
+.track[data-step="2"] .detail[data-i="2"],
+.track[data-step="3"] .detail[data-i="3"],
+.track[data-step="4"] .detail[data-i="4"] {
   opacity: 1;
+  visibility: visible;
+  transition: opacity var(--dur-2) var(--ease-out), visibility 0s linear 0s;
 }
 
 .rail {
@@ -338,24 +354,58 @@
   background: var(--ink);
 }
 
+@media (max-height: 820px) and (min-width: 1061px) {
+  .sessionBody,
+  .store {
+    padding: 10px;
+  }
+  .store {
+    gap: 8px;
+  }
+  .obsList {
+    gap: 4px;
+  }
+  .obs {
+    padding: 4px 8px;
+  }
+  .memory {
+    padding: 8px 12px;
+    gap: 6px;
+  }
+  .mon,
+  .tue {
+    gap: 6px;
+  }
+}
+
 @media (max-width: 1060px) {
   .stage {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--s-4);
   }
+  .side {
+    gap: var(--s-2);
+  }
   .steps {
     padding-left: 14px;
     gap: 0;
   }
+  .details {
+    padding-left: 50px;
+  }
   .step {
-    display: none;
+    grid-area: 1 / 1;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--dur-2) var(--ease-out), visibility 0s linear var(--dur-2);
   }
   .track[data-step="0"] .step[data-i="0"],
   .track[data-step="1"] .step[data-i="1"],
   .track[data-step="2"] .step[data-i="2"],
   .track[data-step="3"] .step[data-i="3"],
   .track[data-step="4"] .step[data-i="4"] {
-    display: grid;
+    visibility: visible;
+    transition: opacity var(--dur-2) var(--ease-out), visibility 0s linear 0s;
   }
 }
 
@@ -405,7 +455,7 @@
   .hookTag {
     display: none;
   }
-  .step p {
+  .detail {
     font-size: var(--t-12);
   }
 }
@@ -420,13 +470,20 @@
     height: auto;
     padding: var(--s-6) 0 var(--s-9);
   }
-  .step {
-    opacity: 1;
-    display: grid;
+  .steps {
+    display: none;
   }
-  .step p {
-    max-height: none;
+  .details {
+    gap: var(--s-3);
+    padding-left: 0;
+  }
+  .detail {
+    grid-area: auto;
     opacity: 1;
+    visibility: visible;
+  }
+  .detailTitle {
+    display: inline;
   }
   .k,
   .obs,

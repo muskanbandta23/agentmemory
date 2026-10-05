@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/MCP-43_tools-1f6feb?style=flat-square" alt="54 MCP tools" />
+  <img src="https://img.shields.io/badge/MCP-54_tools-1f6feb?style=flat-square" alt="54 MCP tools" />
   <img src="https://img.shields.io/badge/Plugin-memory_slot-1f6feb?style=flat-square" alt="OpenClaw memory plugin" />
   <img src="https://img.shields.io/badge/R@5-95.2%25-00875f?style=flat-square" alt="95.2% R@5" />
   <img src="https://img.shields.io/badge/Self--hosted-yes-00875f?style=flat-square" alt="Self-hosted" />

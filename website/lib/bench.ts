@@ -11,10 +11,7 @@ export interface TypeHits {
 export const TYPE_HITS: TypeHits[] = LONGMEMEVAL.byType.map((t) => ({
   type: t.type,
   count: t.count,
-  hits: {
-    5: Math.round((t.count * t.r5) / 100),
-    10: Math.round((t.count * t.r10) / 100),
-  },
+  hits: { 5: t.h5, 10: t.h10 },
 }));
 
 export function totalHits(k: K): number {

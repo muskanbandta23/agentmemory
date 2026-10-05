@@ -106,7 +106,7 @@ Scale, durability and safety release. The iii engine moves from 0.11.2 to 0.22.1
 ### Performance
 
 - **Vectors are stored per key in fill-and-roll buckets**, so a save rewrites a few buckets instead of the whole index and the store no longer hits V8's string limit at about 49,000 vectors (#1416).
-- **Index saves are throttled and each leg reports its own state**; a failing BM25 save no longer skips the vector save (#1415).
+- **Index saves are throttled and each leg reports its own state**, so one failing leg no longer skips the others (#1415).
 - **The audit log lives in monthly scopes** read newest first (#1419).
 - **Session start context and observation lookups use small secondary indexes** instead of listing every session (#1418).
 - **`mem::remember` calls the embedding provider outside the global save lock** (#1423).

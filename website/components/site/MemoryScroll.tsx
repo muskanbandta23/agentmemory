@@ -76,20 +76,29 @@ export function MemoryScroll() {
       <div ref={ref} className={s.track} data-step="0">
         <div className={s.sticky}>
           <div className={`wrap ${s.stage}`}>
-            <ol className={s.steps}>
-              {STEPS.map((st, i) => (
-                <li key={st.n} className={s.step} data-i={i}>
-                  <span className={`mono ${s.num}`}>{st.n}</span>
-                  <div>
+            <div className={s.side}>
+              <ol className={s.steps}>
+                {STEPS.map((st, i) => (
+                  <li key={st.n} className={s.step} data-i={i}>
+                    <span className={`mono ${s.num}`}>{st.n}</span>
                     <h3>{st.title}</h3>
-                    <p>{st.body}</p>
-                  </div>
+                  </li>
+                ))}
+                <li className={s.rail} aria-hidden="true">
+                  <span data-rail="" />
                 </li>
-              ))}
-              <li className={s.rail} aria-hidden="true">
-                <span data-rail="" />
-              </li>
-            </ol>
+              </ol>
+              <div className={s.details}>
+                {STEPS.map((st, i) => (
+                  <p key={st.n} className={s.detail} data-i={i}>
+                    <span className={s.detailTitle}>
+                      {st.n} {st.title}.{" "}
+                    </span>
+                    {st.body}
+                  </p>
+                ))}
+              </div>
+            </div>
 
             <div className={s.figure} aria-hidden="true">
               <div className={`${s.pane} ${s.sessionPane}`}>

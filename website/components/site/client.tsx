@@ -156,7 +156,7 @@ export function useScrollProgress<T extends HTMLElement>(steps = 0) {
     };
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       el.dataset.step = "all";
-      paint(0.79);
+      paint(1);
       return;
     }
     let frame = 0;
