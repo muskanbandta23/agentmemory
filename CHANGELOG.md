@@ -117,6 +117,7 @@ Scale, durability and safety release. The iii engine moves from 0.11.2 to 0.22.1
 
 ### Docs and internal
 
+- **agent-memory.dev is rebuilt** around use cases and sourced proof: agent sessions showing what memory changes, a view of the 1,571 tokens the next session gets out of a month of history, live GitHub and all-time npm numbers, and new /benchmarks, /security, /privacy, /changelog and /vs comparison pages. It ships robots.txt, a sitemap, llms.txt and llms-full.txt, and link previews now point at agent-memory.dev instead of a parked domain.
 - `npm run docs:sync` and `npm run docs:check` keep the documented counts and versions in README, the translated READMEs and AGENTS.md in step with the code.
 - The README documents auth by default, request rules, file path roots, the capture inbox and spool, and the pending vector log (#1460, #1462, #1467).
 - The README, the config skill reference and `agentmemory --help` document `AGENTMEMORY_III_CONFIG` and the engine bind address, including the Docker engine config (#1472).
