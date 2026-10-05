@@ -148,15 +148,16 @@
   background: var(--sunk);
   color: var(--ink);
   text-align: left;
-  opacity: 0;
-  transform: translateY(4px);
-  transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out),
-    border-color var(--dur-1) ease;
+  transition: transform var(--dur-1) var(--ease-out), border-color var(--dur-1) ease;
 }
 
 .cmd code {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.slug {
+  white-space: nowrap;
 }
 
 .cmd :global(.copy-state) {
@@ -174,8 +175,6 @@
 
 .cmdNone {
   color: var(--faint);
-  opacity: 0;
-  transition: opacity var(--dur-2) var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -188,28 +187,30 @@
   }
 }
 
-.card:hover .cmd,
-.card:focus-within .cmd,
-.card:hover .cmdNone,
-.card:focus-within .cmdNone {
-  opacity: 1;
-  transform: none;
-}
-
-@media (hover: none), (pointer: coarse) {
-  .cmd,
-  .cmdNone {
-    opacity: 1;
-    transform: none;
-  }
-}
 
 @media (max-width: 520px) {
   .grid {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .card {
     min-height: 0;
+    padding: var(--s-3);
+    grid-template-rows: auto;
+  }
+  .more {
+    display: none;
+  }
+  .tile {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+  }
+  .logo {
+    width: 18px;
+    height: 18px;
+  }
+  .name a {
+    font-size: var(--t-14);
   }
 }
 
