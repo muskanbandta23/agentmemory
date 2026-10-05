@@ -173,7 +173,7 @@
 
 .injHead {
   font-size: var(--t-12);
-  color: var(--ink);
+  color: var(--accent-ink);
 }
 
 .slots {
@@ -267,7 +267,7 @@
 }
 
 .focus .sel {
-  background: var(--ink);
+  background: var(--accent);
   transform: scale(1.08);
 }
 
@@ -276,13 +276,13 @@
 }
 
 .play .tick {
-  background: var(--bg);
-  border-color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 .focus .slot {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 @media (max-width: 1000px) {
@@ -357,15 +357,15 @@
   }
   .figure .sel,
   .figure .slot {
-    background: var(--ink);
-    border-color: var(--ink);
+    background: var(--accent);
+    border-color: var(--accent);
   }
   .figure .steps li {
     color: var(--bg);
   }
   .figure .tick {
-    background: var(--bg);
-    border-color: var(--bg);
+    background: var(--accent);
+    border-color: var(--accent);
   }
   .sq,
   .slot,
