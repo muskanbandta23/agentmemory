@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-## [0.10.0] - 2026-10-03
+## [0.9.30] - 2026-10-05
 
 Scale, durability and safety release. The iii engine moves from 0.11.2 to 0.22.1. The stores that grew without bound on shared daemons (graph provenance, the audit log, the vector index, the viewer stream backlog) are bounded and heal themselves at boot. Capture is durable end to end: the server accepts each observation into a persistent inbox with a restart-safe event id, and hooks keep an offline spool while the server is down. Vectors survive a force-kill through a pending log. The REST API requires auth by default. Redis becomes an opt-in state backend, and the viewer is rebuilt around one snapshot plus live stream events with a Health page backed by `GET /agentmemory/status`. Every publish now goes through a release gate that installs the packed tarballs and runs capture and recovery against them. Contributions from david-waltermire, a652, cbsincool and dmazhukov, with earlier work by DaveCole, Srinath279, joyjit and cristianbdev carried into merged PRs.
 
@@ -88,6 +88,8 @@ Scale, durability and safety release. The iii engine moves from 0.11.2 to 0.22.1
 - Consolidation and provider detection use the same check, and functions that need an LLM show as off instead of failed (#1433).
 - Worker shutdown no longer hangs when the engine is already gone (#1396).
 - Fresh installs are portable and persistent, and native and Docker removal stops the worker before the engine (#892).
+- **`OPENAI_EMBEDDING_API_KEY` is honored** when the embedding provider is auto-detected or chosen, and wins over `OPENAI_API_KEY`; blank keys count as unset (#1472).
+- **SessionStart context reaches hosts that expect structured hook output.** When the hook input names the `SessionStart` event, context is returned as `hookSpecificOutput.additionalContext`; hosts that send no event name still get plain text (#1472).
 
 ### Security
 
@@ -117,6 +119,7 @@ Scale, durability and safety release. The iii engine moves from 0.11.2 to 0.22.1
 
 - `npm run docs:sync` and `npm run docs:check` keep the documented counts and versions in README, the translated READMEs and AGENTS.md in step with the code.
 - The README documents auth by default, request rules, file path roots, the capture inbox and spool, and the pending vector log (#1460, #1462, #1467).
+- The README, the config skill reference and `agentmemory --help` document `AGENTMEMORY_III_CONFIG` and the engine bind address, including the Docker engine config (#1472).
 - Code and tests no longer cite issue or PR numbers (#1469).
 - The `index_persist` audit gating suite is restored against bucketed persistence and monthly audit scopes, originally written by dmazhukov in #1182.
 - Unit tests grew from about 1,700 to more than 2,400.
@@ -256,7 +259,7 @@ Wave release closing several breaking regressions reported against v0.9.26, plus
 - `/agentmemory:forget` skill still calls `memory_governance_delete` which only touches `KV.memories` and never observations ([#833](https://github.com/rohitg00/agentmemory/issues/833)). Skill rewrite + new `memory_forget` MCP tool tracked separately.
 - `crypto.randomUUID()` global-only on Node <19 ([#715](https://github.com/rohitg00/agentmemory/issues/715)). Drop-in import fix tracked.
 
-[0.10.0]: https://github.com/rohitg00/agentmemory/compare/v0.9.29...v0.10.0
+[0.9.30]: https://github.com/rohitg00/agentmemory/compare/v0.9.29...v0.9.30
 [0.9.29]: https://github.com/rohitg00/agentmemory/compare/v0.9.28...v0.9.29
 [0.9.28]: https://github.com/rohitg00/agentmemory/compare/v0.9.27...v0.9.28
 [0.9.27]: https://github.com/rohitg00/agentmemory/compare/v0.9.26...v0.9.27
