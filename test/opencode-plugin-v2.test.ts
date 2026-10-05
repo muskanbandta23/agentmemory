@@ -293,9 +293,28 @@ describe("OpenCode V2 capture — hooks", () => {
     expect(h.posts.filter((p) => p === "context").length).toBeLessThanOrEqual(1);
     await h.cleanup();
   });
-  it("nao registra o hook compaction: ele nunca dispara", async () => {
+  it("registra o hook compaction e injeta memoria quando invocado", async () => {
     const h = await harness();
-    expect(h.hooksOf["compaction"]).toBeUndefined();
+    expect(h.hooksOf["compaction"]).toBeDefined();
+    h.push({ type: "session.execution.started", data: { sessionID: SID }, id: "e", location: {}, created: 1 });
+    await h.drain();
+    const ev: any = { sessionID: SID, system: [{ type: "text", text: "sys" }] };
+    await h.fire("compaction", ev);
+    expect(ev.system.length).toBeGreaterThan(1);
+    await h.cleanup();
+  });
+
+  it("o hook compaction reaproveita o contexto do turno", async () => {
+    const h = await harness();
+    h.push({ type: "session.execution.started", data: { sessionID: SID }, id: "e", location: {}, created: 1 });
+    await h.drain();
+    const ctx: any = { sessionID: SID, agent: "build", model: { id: "m", providerID: "p" }, options: {}, system: [{ type: "text", text: "sys" }], messages: [], tools: {} };
+    await h.fire("context", ctx);
+    const after = h.posts.filter((p) => p === "context").length;
+    const ev: any = { sessionID: SID, system: [{ type: "text", text: "sys" }] };
+    await h.fire("compaction", ev);
+    expect(h.posts.filter((p) => p === "context").length).toBe(after);
+    expect(ev.system.length).toBeGreaterThan(1);
     await h.cleanup();
   });
 });
@@ -337,11 +356,8 @@ describe("OpenCode V2 capture — eventos do stream", () => {
   const cases: Array<[string, any, string]> = [
     ["session.step.started", { sessionID: SID, agent: "build", assistantMessageID: "m", model: { id: "m", providerID: "p" }, started: 1 }, "step_start"],
     ["session.step.ended", { sessionID: SID, assistantMessageID: "m", cost: 0.1, rawFinish: "stop", tokens: { input: 1, output: 2, reasoning: 0, cache: { read: 3, write: 0 } } }, "step_finish"],
-    ["session.usage.updated", { sessionID: SID, cost: 0.2, tokens: { input: 1, output: 2, reasoning: 0, cache: { read: 3, write: 0 } } }, "assistant_message"],
     ["session.agent.selected", { sessionID: SID, agent: "build", previous: "plan" }, "agent_selected"],
     ["session.reasoning.ended", { sessionID: SID, assistantMessageID: "m", ordinal: 0, text: "pensando" }, "reasoning"],
-    ["session.text.started", { sessionID: SID, assistantMessageID: "m", ordinal: 0 }, "text_started"],
-    ["session.text.ended", { sessionID: SID, assistantMessageID: "m", ordinal: 0, text: "oi" }, "text_ended"],
     ["session.instructions.updated", { sessionID: SID, text: "instr", delta: {} }, "notification"],
     ["session.inbox.delivered", { sessionID: SID, inboxID: "i1" }, "prompt_delivered"],
     ["permission.asked", { sessionID: SID, action: "bash", resources: ["rm"], tool: { callID: "c1" } }, "notification"],

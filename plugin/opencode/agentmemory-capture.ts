@@ -1102,19 +1102,25 @@ async function v2Setup(ctx: any) {
     }
   });
 
-  // ── compaction ────────────────────────────────────────────────────────────
-  // Removed: `ctx.session.hook("compaction")`.
-  //
-  // It registers without error and the callback is never invoked, even when
-  // `ctx.session.compact()` is called directly and returns a compaction
-  // message. The loader validates hook names at registration but not against
-  // invocation, so a registered hook is not evidence that it fires.
-  //
-  // Compaction is therefore captured from `session.compaction.started` and
-  // `session.compaction.failed` in the event switch below. The consequence is
-  // that memory can no longer be attached to the compaction prompt, which is
-  // recorded as a limitation rather than approximated: no compaction event
-  // carries a `system` array to inject into.
+  // ── compaction hook ──────────────────────────────────────────────────────
+  // Kept because a compaction is queued by `ctx.session.compact()` and runs
+  // later, so an unverified hook cannot be ruled out by queueing alone. It
+  // shares the turn's context: the compaction prompt belongs to one prompt.
+
+  await ctx.session.hook("compaction", async (event: any) => {
+    const sid = event?.sessionID || activeSessionId;
+    if (!sid) return;
+    if (!Array.isArray(event?.system)) return;
+    let ctxText = turnContextCache.get(sid);
+    if (typeof ctxText !== "string" || ctxText.length === 0) {
+      const result = await postJson("/context", { sessionId: sid, project: projectFor(sid).name });
+      ctxText = (result as any)?.context;
+      if (typeof ctxText === "string" && ctxText.length > 0) turnContextCache.set(sid, ctxText);
+    }
+    if (typeof ctxText === "string" && ctxText.length > 0) {
+      event.system.push({ type: "text", text: ctxText });
+    }
+  });
 
   // ── event -> ctx.event.subscribe() ───────────────────────────────────────
   // All session activity arrives on the public event stream, aborted on unload.
@@ -1283,46 +1289,12 @@ async function v2Setup(ctx: any) {
         return;
       }
 
-      case "session.usage.updated": {
-        if (!sid0) return;
-        const tokens = (data.tokens ?? {}) as Record<string, any>;
-        await observeV2(sid0, "assistant_message", {
-          messageID: null,
-          modelID: null,
-          providerID: null,
-          cost: data.cost ?? 0,
-          tokens: {
-            input: tokens.input ?? 0,
-            output: tokens.output ?? 0,
-            reasoning: tokens.reasoning ?? 0,
-            cache_read: tokens.cache?.read ?? 0,
-            cache_write: tokens.cache?.write ?? 0,
-          },
-          finish: null,
-          error: null,
-          duration_ms: null,
-        });
-        return;
-      }
-
       case "session.agent.selected": {
         if (!sid0) return;
         await observeV2(sid0, "agent_selected", {
           name: (data.agent as string) ?? null,
           previous: (data.previous as string) ?? null,
         });
-        return;
-      }
-
-      case "session.text.started": {
-        if (!sid0) return;
-        await observeV2(sid0, "text_started", { messageID: (data.assistantMessageID as string) ?? null });
-        return;
-      }
-
-      case "session.text.ended": {
-        if (!sid0) return;
-        await observeV2(sid0, "text_ended", { messageID: (data.assistantMessageID as string) ?? null });
         return;
       }
 
