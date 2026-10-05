@@ -68,7 +68,7 @@
 
 .fill {
   fill: none;
-  stroke: var(--ink);
+  stroke: var(--accent);
   stroke-width: 4;
   stroke-linecap: round;
   stroke-dasharray: 1;
@@ -130,7 +130,7 @@
 }
 
 .faceT {
-  fill: var(--surface);
+  fill: var(--accent);
   stroke: var(--ink);
   stroke-width: 1.2;
 }
@@ -194,7 +194,7 @@
 
 .ctxTag {
   opacity: 0;
-  color: color-mix(in srgb, var(--bg) 70%, transparent);
+  color: var(--accent);
 }
 
 .ctxRows {

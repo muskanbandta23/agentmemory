@@ -97,7 +97,7 @@
 .rail span {
   position: absolute;
   inset: 0;
-  background: var(--ink);
+  background: var(--accent);
   transform-origin: top;
   transform: scaleY(0);
 }
@@ -197,7 +197,7 @@
   display: grid;
   gap: 6px;
   padding: 10px 12px;
-  border: 1px solid var(--ink);
+  border: 1px solid var(--accent);
   border-radius: var(--radius);
   background: var(--sunk);
   font-size: var(--t-12);
@@ -310,7 +310,7 @@
 }
 
 .memory .groupHead {
-  color: color-mix(in srgb, var(--invert-ink) 62%, transparent);
+  color: var(--accent);
 }
 
 .memory p {

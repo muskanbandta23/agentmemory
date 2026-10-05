@@ -92,10 +92,11 @@ export function MemoryField() {
 
     const dots = build();
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const colors = { ink: "#0a0a0a", muted: "#6b6b6b", dot: "rgba(10,10,10,.16)", bg: "#fafafa", line: "#e6e6e6" };
+    const colors = { accent: "#ff7a17", ink: "#0a0a0a", muted: "#6b6b6b", dot: "rgba(10,10,10,.16)", bg: "#fafafa", line: "#e6e6e6" };
     const readColors = () => {
       const cs = getComputedStyle(document.documentElement);
       colors.ink = cs.getPropertyValue("--ink").trim() || colors.ink;
+      colors.accent = cs.getPropertyValue("--accent").trim() || colors.accent;
       colors.muted = cs.getPropertyValue("--muted").trim() || colors.muted;
       colors.dot = cs.getPropertyValue("--dot").trim() || colors.dot;
       colors.bg = cs.getPropertyValue("--surface").trim() || colors.bg;
@@ -224,7 +225,7 @@ export function MemoryField() {
 
       if (qAlpha > 0) {
         ctx.save();
-        ctx.strokeStyle = colors.ink;
+        ctx.strokeStyle = colors.accent;
         ctx.lineWidth = 1;
         for (const d of hits) {
           ctx.globalAlpha = 0.55 * qAlpha;
@@ -234,7 +235,7 @@ export function MemoryField() {
           ctx.stroke();
         }
         ctx.globalAlpha = qAlpha;
-        ctx.fillStyle = colors.ink;
+        ctx.fillStyle = colors.accent;
         ctx.beginPath();
         ctx.arc(qx, qy, 4, 0, Math.PI * 2);
         ctx.fill();
@@ -253,7 +254,7 @@ export function MemoryField() {
         const y = py(d) + Math.cos(now / 1700 + d.phase) * (reduce ? 0 : 0.7);
         const hit = hitSet.has(d);
         ctx.globalAlpha = life * (hit ? 1 : 0.42 * (1 - 0.4 * qAlpha));
-        ctx.fillStyle = hit ? colors.ink : colors.muted;
+        ctx.fillStyle = hit ? colors.accent : colors.muted;
         ctx.beginPath();
         ctx.arc(x, y, hit ? 3.6 : 2.3, 0, Math.PI * 2);
         ctx.fill();
