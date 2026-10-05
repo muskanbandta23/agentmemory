@@ -287,11 +287,10 @@ describe("OpenCode V2 capture — hooks", () => {
       sizes.push(ev.system.length);
     }
     expect(sizes).toEqual([3, 2, 2]);
-    // Two `/context` calls, not three: the first injection reuses the context
-    // `/session/start` already returned and cached, and the next two fetch
-    // fresh. The assertion that matters is `sizes` above - memory lands on
-    // every call.
-    expect(h.posts.filter((p) => p === "context").length).toBeGreaterThanOrEqual(2);
+    // At most one /context for the three model calls. The recalled set does not
+    // change within a prompt, so it is fetched once and reused; a new prompt
+    // clears it. `sizes` above is what shows memory still lands on every call.
+    expect(h.posts.filter((p) => p === "context").length).toBeLessThanOrEqual(1);
     await h.cleanup();
   });
   it("nao registra o hook compaction: ele nunca dispara", async () => {

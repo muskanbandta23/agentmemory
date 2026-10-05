@@ -904,6 +904,9 @@ async function v2Setup(ctx: any) {
   // Shell ids mapped to their session, so `shell.exited` (which carries no
   // sessionID) can attribute an exit code back to the right session.
   const shellSessions = new Map<string, string>();
+  // Recalled context for the current prompt, so a tool continuation reuses it
+  // instead of issuing another /context request.
+  const turnContextCache = new Map<string, string>();
 
   // Every stash write goes through here so the cap is enforced in one place.
   // The file watcher and filesystem handlers fire for any workspace change, so
@@ -1045,6 +1048,7 @@ async function v2Setup(ctx: any) {
       .map((f: any) => (typeof f === "string" ? f : f?.uri ?? f?.filename ?? f?.url))
       .filter(Boolean) as string[];
     stashAdd(sid, files);
+    turnContextCache.delete(sid);
     await observeV2(sid, "prompt_submit", {
       prompt: (event?.prompt?.text ?? "").slice(0, 8000),
       files: files.slice(0, 20),
@@ -1071,16 +1075,17 @@ async function v2Setup(ctx: any) {
       contextInjectedSessions.add(sid);
     }
 
-    // Recalled memory on every call. Prefer what /session/start already
-    // returned for the first call of a session, then fall back to /context.
-    let ctxText = startContextCache.get(sid);
+    // Recalled memory on every call, fetched once per prompt. The hook runs
+    // again for each tool continuation and a /context request per step adds
+    // nothing: within one prompt the recalled set does not change.
+    let ctxText = startContextCache.get(sid) ?? turnContextCache.get(sid);
     if (typeof ctxText !== "string" || ctxText.length === 0) {
       const result = await postJson("/context", { sessionId: sid, project: projectFor(sid).name });
       ctxText = (result as any)?.context;
-    } else {
-      startContextCache.delete(sid);
     }
     if (typeof ctxText === "string" && ctxText.length > 0) {
+      turnContextCache.set(sid, ctxText);
+      startContextCache.delete(sid);
       event.system.push({ type: "text", text: ctxText });
     }
 
