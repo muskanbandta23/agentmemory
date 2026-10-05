@@ -75,12 +75,12 @@ export const LONGMEMEVAL = {
   hybrid: { r5: 95.2, r10: 98.6, r20: 99.4, ndcg10: 87.9, mrr: 88.2 },
   bm25: { r5: 86.2, r10: 94.6, r20: 98.6, ndcg10: 73.0, mrr: 71.5 },
   byType: [
-    { type: "knowledge-update", count: 78, r5: 98.7, r10: 100.0 },
-    { type: "multi-session", count: 133, r5: 97.7, r10: 100.0 },
-    { type: "single-session-assistant", count: 56, r5: 96.4, r10: 98.2 },
-    { type: "temporal-reasoning", count: 133, r5: 95.5, r10: 97.7 },
-    { type: "single-session-user", count: 70, r5: 90.0, r10: 97.1 },
-    { type: "single-session-preference", count: 30, r5: 83.3, r10: 96.7 },
+    { type: "knowledge-update", count: 78, r5: 98.7, r10: 100.0, h5: 77, h10: 78 },
+    { type: "multi-session", count: 133, r5: 97.7, r10: 100.0, h5: 130, h10: 133 },
+    { type: "single-session-assistant", count: 56, r5: 96.4, r10: 98.2, h5: 54, h10: 55 },
+    { type: "temporal-reasoning", count: 133, r5: 95.5, r10: 97.7, h5: 127, h10: 130 },
+    { type: "single-session-user", count: 70, r5: 90.0, r10: 97.1, h5: 63, h10: 68 },
+    { type: "single-session-preference", count: 30, r5: 83.3, r10: 96.7, h5: 25, h10: 29 },
   ],
   embedding: "all-MiniLM-L6-v2, 384 dimensions, local",
 };

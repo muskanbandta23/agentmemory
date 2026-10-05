@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ESSENTIAL_TOOLS, getAllTools } from "../src/mcp/tools-registry.js";
 
@@ -24,7 +24,9 @@ function read(path: string): string {
 }
 
 function trackedFiles(): string[] {
-  return execFileSync("git", ["ls-files"], { cwd: ROOT, encoding: "utf-8" }).split("\n").filter(Boolean);
+  return execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard"], { cwd: ROOT, encoding: "utf-8" })
+    .split("\n")
+    .filter((f) => f && existsSync(join(ROOT, f)));
 }
 
 function countMatches(path: string, pattern: RegExp): number {
@@ -251,6 +253,7 @@ function main(): void {
   const original = new Map(files);
   const nextState: State = { version: state.version, facts: { ...state.facts } };
   const report: string[] = [];
+  const failed: string[] = [];
 
   const version = (JSON.parse(read("package.json")) as { version: string }).version;
   if (version !== state.version) {
@@ -267,6 +270,7 @@ function main(): void {
     const next = fact.value();
     if (next === null) {
       report.push(`${fact.label}: skipped (could not compute)`);
+      failed.push(fact.label);
       continue;
     }
     const olds = state.facts[fact.key] ?? [];
@@ -284,6 +288,10 @@ function main(): void {
   const stateChanged = JSON.stringify(nextState) !== JSON.stringify(state);
 
   if (CHECK) {
+    if (failed.length > 0) {
+      console.error(`docs-sync: could not compute ${failed.join(", ")}, so the check is incomplete.`);
+      process.exit(1);
+    }
     if (changed.length === 0 && !stateChanged) {
       console.log("docs-sync: documented numbers and versions are current.");
       return;
