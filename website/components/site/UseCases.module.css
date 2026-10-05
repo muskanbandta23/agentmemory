@@ -85,6 +85,8 @@
   padding: var(--s-5);
   flex: 1;
   min-height: 380px;
+  display: grid;
+  align-content: center;
 }
 
 .without {
