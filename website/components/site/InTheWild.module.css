@@ -65,7 +65,7 @@
 }
 
 .badgeOutlet {
-  justify-content: center;
+  justify-content: flex-start;
   padding-top: 8px;
   padding-bottom: 8px;
 }
