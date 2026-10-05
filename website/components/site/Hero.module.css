@@ -112,8 +112,69 @@
   color: var(--muted);
 }
 
-.row :global(.btn-solid .copy-state) {
-  color: color-mix(in srgb, var(--bg) 70%, transparent);
+.promptBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 20px 10px 16px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: transform 200ms var(--ease-out), background-color 150ms ease, border-color 150ms ease,
+    color 150ms ease;
+}
+
+.promptBtn:active {
+  transform: scale(0.97);
+}
+
+.promptBtn[data-copied] {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: #fff;
+}
+
+.glyphs {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.glyph {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+  opacity: 0.92;
+  transition: transform 200ms var(--ease-out);
+}
+
+.row :global(.btn) {
+  border-radius: 999px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .promptBtn:hover {
+    transform: translateY(-2px);
+  }
+  .promptBtn:hover:active {
+    transform: translateY(-2px) scale(0.97);
+  }
+  .promptBtn:hover .glyph {
+    transform: translateY(-1.5px) scale(1.12);
+  }
+  .promptBtn:hover .glyph:nth-child(2) {
+    transition-delay: 40ms;
+  }
+  .promptBtn:hover .glyph:nth-child(3) {
+    transition-delay: 80ms;
+  }
 }
 
 .star svg {
@@ -208,6 +269,9 @@
     overflow-wrap: anywhere;
     overflow: visible;
   }
+  .promptBtn {
+    flex: 1 1 100%;
+  }
   .row :global(.btn) {
     flex: 1 1 100%;
     min-width: 0;
@@ -235,5 +299,13 @@
   .facts,
   .visual {
     animation: none;
+  }
+  .promptBtn,
+  .glyph {
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+  }
+  .promptBtn:hover,
+  .promptBtn:hover .glyph {
+    transform: none;
   }
 }
