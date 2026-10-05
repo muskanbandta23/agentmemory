@@ -29,7 +29,9 @@ function Card({ agent, index }: { agent: Agent; index: number }) {
           {agent.detail !== LABEL[agent.support] ? <span className={s.detail}>{agent.detail}</span> : <span />}
           {cmd ? (
             <CopyButton text={cmd} label={`Copy ${cmd}`} className={s.cmd}>
-              <code>{cmd}</code>
+              <code>
+                agentmemory connect <span className={s.slug}>{agent.connect}</span>
+              </code>
             </CopyButton>
           ) : (
             <span className={`mono ${s.cmdNone}`}>add the MCP block below</span>
