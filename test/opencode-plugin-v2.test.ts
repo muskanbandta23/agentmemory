@@ -217,6 +217,26 @@ describe("OpenCode V2 capture — hooks", () => {
     expect(hooksOf(h)("post_tool_failure")).toBe(1);
     await h.cleanup();
   });
+  it("falha le o texto de event.error, a forma que a documentacao da V2 descreve", async () => {
+    const h = await harness();
+    h.push({ type: "session.execution.started", data: { sessionID: SID }, id: "e", location: {}, created: 1 });
+    await h.drain();
+    await h.fireTool("execute.after", {
+      tool: "bash",
+      sessionID: SID,
+      id: "c1",
+      status: "error",
+      input: { command: "false" },
+      error: { name: "BashError", message: "command exited with 1" },
+      result: { metadata: { exit: 1, status: "error", truncated: false } },
+    });
+    await h.drain();
+    const fail = h.observed.find((o) => o.hook === "post_tool_failure");
+    expect(fail, "post_tool_failure nao foi observado").toBeDefined();
+    expect(String(fail!.body.data.tool_output)).toContain("command exited with 1");
+    await h.cleanup();
+  });
+
   it("session.tool.failed nao duplica o que execute.after ja reportou", async () => {
     const h = await harness();
     h.push({ type: "session.execution.started", data: { sessionID: SID }, id: "e", location: {}, created: 1 });

@@ -1012,7 +1012,7 @@ async function v2Setup(ctx: any) {
         tool_name: tool,
         call_id: callId,
         tool_input: safeSlice(event?.input, 4000),
-        tool_output: safeSlice(text || extractErrorMessage(metadata?.error), 8000),
+        tool_output: safeSlice(text || extractErrorMessage(event?.error) || extractErrorMessage(metadata?.error), 8000),
         duration_ms: duration,
       });
       // Mark the call as covered so `session.tool.failed`, which fires for the
