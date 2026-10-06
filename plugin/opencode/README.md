@@ -110,8 +110,11 @@ export default {
 }
 ```
 
-- **OpenCode 2.x** reads `id` and `setup()` and ignores `server()`.
-- **OpenCode 1.x** calls `server()` and uses the returned hooks.
+- **OpenCode 2.x** reads `id` and `setup()`.
+- **OpenCode 1.17 and 1.18** call `server()` and use the returned hooks. They
+  also call `setup()`, with a context that has no `tool`, `session` or `event`.
+  `setup()` returns immediately when those are missing, so only the V1 hooks
+  run there.
 - The two implementations are separate on purpose. Sharing an export does not
   translate V1 hooks into V2 hooks, and the payloads differ enough that a shared
   core would overstate V2 coverage.
@@ -121,17 +124,12 @@ export default {
   sees one plugin; the named export is not consulted unless a loader iterates
   every export, which no observed version does.
 
-**On verifying the V1 load.** This has not been confirmed against a running V1
-OpenCode, for a reason worth stating: `@opencode/cli` has no `1.x` line. Its
-releases go from `0.0.0-dev-*` and `0.0.0-beta-*` straight to `2.0.x`, and the
-`1.18.x` version associated with the V1 plugin API is `@opencode-ai/sdk`, not
-the CLI. Installing the last pre-2.0 build (`0.0.0-beta-19507`) produces a
-server that runs but does not load a `.ts` plugin from either the user config
-or a project config in an isolated home, so it produced no observation either
-way. Confirming this needs a V1-era build that loads plugins, or the repo's own
-CI.
+**V1 load, verified.** OpenCode 1.17.10 and 1.18.34 (the `opencode-ai` npm
+package) were run against this file in live sessions: one plugin instance,
+reads and shell calls captured through the V1 hooks, and one `config_loaded`
+per session.
 
-Validated against **OpenCode v2.0.22** by running the plugin inside a live
+Validated against **OpenCode v2.0.22**, and re-checked on **v2.0.24**, by running the plugin inside a live
 session and logging the objects as they arrive, not by reading the generated
 SDK types. That distinction matters: `@opencode-ai/sdk` 1.4.10 declares
 `event.properties` and the V1 event names, and it is stale relative to the
@@ -148,9 +146,10 @@ running server.
 - **`list()` returns `{ data, location }`.** `ctx.agent.list()`,
   `ctx.provider.list()` and `ctx.mcp.list()` all resolve to that shape.
 - **`ctx.model.default()` is a promise.** Unawaited it is `{}`.
-- **`session.created` exists.** It carries `sessionID`, `projectID`,
-  `location`, `title`, `version`, `subpath` and `slug`, so a session normally
-  registers on creation with its title and directory in hand. The fallback to
+- **`session.created` exists.** On v2.0.24 it carries `sessionID`,
+  `projectID`, `location`, `version`, `subpath` and `slug`. The title arrives
+  later in `session.renamed`, so a session registers on creation with its
+  directory in hand. The fallback to
   "first event carrying an ID" remains for sessions that predate the plugin
   load, which never emit the event. An earlier revision of this plugin claimed
   `session.created` did not exist; that came from observing an already-open
@@ -166,9 +165,15 @@ running server.
   and the events are captured alongside it: if the hook is invoked it attaches
   memory to the compaction prompt, and the events record that compaction
   happened either way.
-- **`session.execution.succeeded` is observed but not recorded.** It carries
-  only `{ sessionID }`, which every other observation in the session already
-  carries, and `session.step.ended` covers the meaningful signal.
+- **`session.execution.succeeded` triggers `/summarize`.** It fires when a run
+  finishes and carries only `{ sessionID }`, so it adds no observation. V1
+  summarizes when a session goes idle; this is the V2 equivalent.
+- **`session.instructions.updated` carries `delta`, a map from instruction
+  source to content hash.** The plugin records the source names, not the
+  hashes.
+- **A standalone `opencode session delete` exits before the plugin sees
+  `session.deleted`.** The session then stays open in agentmemory. Summaries do
+  not depend on it, because they come from `session.execution.succeeded`.
 - **`parentID` is accepted by `ctx.session.create` but appears in no event
   payload.** The `parentID` sent to `/session/start` is therefore always null;
   the field is kept in case a future version populates it.
@@ -195,10 +200,10 @@ injection pushes part objects rather than strings.
 |---|---|
 | `session.created` | `session.created` (or first event carrying `data.sessionID`) |
 | `session.deleted` | `session.deleted` |
-| `session.status`, `session.idle` | `session.step.started` / `session.step.ended` |
-| `message.updated` | `session.text.*`, `session.reasoning.*` |
+| `session.status`, `session.idle` | `session.step.started` / `session.step.ended`; `session.execution.succeeded` triggers `/summarize` |
+| `message.updated` | `session.text.ended` (`assistant_message`), `session.reasoning.ended` |
 | `message.part.updated` | `ctx.tool.hook("execute.after")` |
-| `command.executed` | `shell.created` (result from `shell.exited`) |
+| `command.executed` | the command arrives through `execute.after`; `shell.exited` records a non-zero exit |
 | `session.error` | `session.execution.failed` |
 | `file.edited` | `file.watcher.updated` |
 | `session.compacted` | `session.compaction.started` / `.failed` |
@@ -264,7 +269,7 @@ these three risks retired with it.
 
 ### Verification
 
-- `test/opencode-plugin-v2.test.ts` — 33 cases driving the V2 path with payloads
+- `test/opencode-plugin-v2.test.ts` — 38 cases driving the V2 path with payloads
   captured from v2.0.22. It runs under the repo's existing vitest, so:
 
   ```bash
@@ -278,14 +283,17 @@ these three risks retired with it.
   fail on it and pass here.
 - In a live session the plugin produced real observations for
   `post_tool_use`, `config_loaded`, `step_start`, `step_finish`,
-  `command_executed`, `reasoning` and `notification`.
+  `reasoning`, `assistant_message` and `notification`, and requested
+  `/summarize` when the run finished.
   `session.compaction.started` and `session.compaction.failed` were confirmed
   by forcing a compaction in a running v2.0.22.
 
-`session.text.started` / `.ended` and `session.usage.updated` are read but not
-recorded: the first two carry no content and the third duplicates the token and
-cost figures already in `step_finish`, and every observation goes through the
-capture pipeline.
+`session.text.started`, `session.reasoning.started`, `session.inbox.delivered`,
+`shell.created` and `session.usage.updated` are read but not recorded. The
+first two carry no text yet, the inbox event carries only an ID, `shell.created`
+duplicates the command that `execute.after` already records, and usage
+duplicates the token and cost figures in `step_finish`. A config snapshot equal
+to the previous one is not recorded again.
 
 Earlier in this branch the V2 path loaded cleanly and captured almost nothing,
 because it was verified against a hand-built context object that agreed with
