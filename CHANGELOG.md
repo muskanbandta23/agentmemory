@@ -6,9 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-## [0.9.30] - 2026-10-05
+## [0.9.30] - 2026-10-06
 
-Scale, durability and safety release. The iii engine moves from 0.11.2 to 0.22.1. The stores that grew without bound on shared daemons (graph provenance, the audit log, the vector index, the viewer stream backlog) are bounded and heal themselves at boot. Capture is durable end to end: the server accepts each observation into a persistent inbox with a restart-safe event id, and hooks keep an offline spool while the server is down. Vectors survive a force-kill through a pending log. The REST API requires auth by default. Redis becomes an opt-in state backend, and the viewer is rebuilt around one snapshot plus live stream events with a Health page backed by `GET /agentmemory/status`. Every publish now goes through a release gate that installs the packed tarballs and runs capture and recovery against them. Contributions from david-waltermire, a652, cbsincool and dmazhukov, with earlier work by DaveCole, Srinath279, joyjit and cristianbdev carried into merged PRs.
+Scale, durability and safety release. The iii engine moves from 0.11.2 to 0.22.1. The stores that grew without bound on shared daemons (graph provenance, the audit log, the vector index, the viewer stream backlog) are bounded and heal themselves at boot. Capture is durable end to end: the server accepts each observation into a persistent inbox with a restart-safe event id, and hooks keep an offline spool while the server is down. Vectors survive a force-kill through a pending log. The REST API requires auth by default. Redis becomes an opt-in state backend, and the viewer is rebuilt around one snapshot plus live stream events with a Health page backed by `GET /agentmemory/status`. Every publish now goes through a release gate that installs the packed tarballs and runs capture and recovery against them. Contributions from david-waltermire, a652, cbsincool, dmazhukov and Tyxiel, with earlier work by DaveCole, Srinath279, joyjit and cristianbdev carried into merged PRs.
 
 ### Breaking changes
 
@@ -65,6 +65,7 @@ Scale, durability and safety release. The iii engine moves from 0.11.2 to 0.22.1
 - **Multi-instance installs**: `--instance N` gets its own port quartet, data directory and lifecycle state, and `--port` derives the other ports (#892).
 - Procedures are extracted from finished sessions when consolidation is on and an LLM provider is configured (#1407).
 - `memory_patterns` takes an optional `limit` (#1424). `POST /lessons` accepts `sourceIds`, and `mem::evolve` returns 409, 400 and 404 errors (#1433).
+- **OpenCode 2 support in the OpenCode plugin** (#1476, building on #1451 by Tyxiel). One `agentmemory-capture.ts` serves both plugin APIs: OpenCode 2 loads its `setup()` entry and OpenCode 1.x keeps the existing hooks. On OpenCode 2 it captures prompts, tool calls with their output, the assistant's answer, step and compaction events, injects memory on every model call, and requests a summary when a run finishes. Checked in live sessions on OpenCode 2.0.24, 1.18.34 and 1.17.10.
 
 ### Fixed
 
@@ -122,7 +123,7 @@ Scale, durability and safety release. The iii engine moves from 0.11.2 to 0.22.1
 - The README documents auth by default, request rules, file path roots, the capture inbox and spool, and the pending vector log (#1460, #1462, #1467).
 - The README, the config skill reference and `agentmemory --help` document `AGENTMEMORY_III_CONFIG` and the engine bind address, including the Docker engine config (#1472).
 - Code and tests no longer cite issue or PR numbers (#1469).
-- The `index_persist` audit gating suite is restored against bucketed persistence and monthly audit scopes, originally written by dmazhukov in #1182.
+- The `index_persist` audit gating suite is restored against bucketed persistence and monthly audit scopes (#1477), originally written by dmazhukov in #1182.
 - Unit tests grew from about 1,700 to more than 2,400.
 - Dependabot no longer proposes `iii-sdk` bumps; the engine pin and the SDK move together by hand (#1396). `dotenv` 18.0.3 (#1430) and `@types/node` 26.6.2 (#1401, #1400).
 - The deploy Dockerfiles refuse to build when `III_VERSION` and `III_SDK_VERSION` differ (#1396).

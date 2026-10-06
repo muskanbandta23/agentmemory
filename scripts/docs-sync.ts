@@ -208,6 +208,7 @@ function replaceFact(text: string, fact: Fact, olds: string[], next: string): st
     });
     if (fact.badge) {
       out = out.replace(new RegExp(`>${escapeRegex(old)}\\+?<`, "g"), `>${next}<`);
+      out = out.replace(new RegExp(`(aria-label="[^"]*?)${escapeRegex(old)}\\+?(")`, "g"), `$1${next}$2`);
     }
   }
   return out;
