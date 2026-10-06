@@ -120,7 +120,7 @@ export function InfraTiles() {
             memory_smart_search(&quot;auth refresh&quot;)<span className={s.caret} />
           </code>
           <a className="src" href={src.agentLife} target="_blank" rel="noreferrer">
-            p50, coding-agent-life-v1
+            p50, coding-agent-life-v1 on v0.9.26
           </a>
         </Reveal>
         <Reveal className={s.tile} delay={80}>

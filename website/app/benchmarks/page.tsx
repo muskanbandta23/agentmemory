@@ -165,7 +165,8 @@ export default function BenchmarksPage() {
         </div>
         <p>
           {TOKENS.agentmemory.toLocaleString("en-US")} tokens instead of {TOKENS.fullContext.toLocaleString("en-US")} is{" "}
-          {TOKENS.savedPct}% fewer, with higher precision. <Src href={src.tokens}>benchmark/REAL-EMBEDDINGS.md</Src>
+          {TOKENS.savedPct}% fewer, with higher precision, measured on v0.6.0.{" "}
+          <Src href={src.tokens}>benchmark/REAL-EMBEDDINGS.md</Src>
         </p>
 
         <h2>Crash recovery</h2>

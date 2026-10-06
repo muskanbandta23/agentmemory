@@ -107,7 +107,7 @@ export function llmsFullTxt(): string {
     `- BM25 only (keyless): recall@5 ${b.r5}%, recall@10 ${b.r10}%, recall@20 ${b.r20}%, NDCG@10 ${b.ndcg10}%, MRR ${b.mrr}%`,
     `- Source and reproduction steps: ${src.longmemeval}`,
     "",
-    `Token cost: recalling from agentmemory used ${TOKENS.agentmemory.toLocaleString("en-US")} tokens where loading the full history used ${TOKENS.fullContext.toLocaleString("en-US")}, about ${TOKENS.savedPct}% fewer. Source: ${src.tokens}`,
+    `Token cost: recalling from agentmemory used ${TOKENS.agentmemory.toLocaleString("en-US")} tokens where loading the full history used ${TOKENS.fullContext.toLocaleString("en-US")}, about ${TOKENS.savedPct}% fewer, measured on v0.6.0. Source: ${src.tokens}`,
     "",
     "Release gate: every publish installs the packed package and runs these scenarios against it:",
     "",

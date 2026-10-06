@@ -62,8 +62,9 @@ export default function SecurityPage() {
         </table>
         <p>
           Configuration and the secret live in <code>~/.agentmemory</code>. Stored state lives in the platform data
-          directory: <code>~/Library/Application Support/agentmemory</code> on macOS, <code>~/.local/share/agentmemory</code>{" "}
-          on Linux and <code>%APPDATA%\agentmemory</code> on Windows. <code>AGENTMEMORY_DATA_DIR</code> moves it.
+          directory: <code>~/Library/Application Support/agentmemory</code> on macOS,{" "}
+          <code>$XDG_DATA_HOME/agentmemory</code> or <code>~/.local/share/agentmemory</code> on Linux, and{" "}
+          <code>%APPDATA%\agentmemory</code> on Windows. <code>AGENTMEMORY_DATA_DIR</code> moves it.
         </p>
 
         <h2>Authentication is on by default</h2>

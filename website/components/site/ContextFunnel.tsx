@@ -152,14 +152,14 @@ export function ContextFunnel() {
             <span className={s.big}>{TOKENS.savedPct}%</span>
             <span className={s.what}>fewer input tokens than pasting your whole history</span>
             <a className="src" href={src.tokens} target="_blank" rel="noreferrer">
-              240 observations, 30 sessions
+              240 observations, 30 sessions, v0.6.0
             </a>
           </li>
           <li>
             <span className={s.big}>14 ms</span>
             <span className={s.what}>median recall, with nothing sent over the network</span>
             <a className="src" href={src.agentLife} target="_blank" rel="noreferrer">
-              coding-agent-life-v1
+              coding-agent-life-v1 on v0.9.26
             </a>
           </li>
         </ul>
