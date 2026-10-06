@@ -1,9 +1,10 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { ESSENTIAL_TOOLS, getAllTools } from "../src/mcp/tools-registry.js";
 
-const ROOT = join(import.meta.dirname, "..");
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const STATE_PATH = "scripts/docs-sync.state.json";
 const CHECK = process.argv.includes("--check");
 const REPO_URL = "https://github.com/rohitg00/agentmemory";
@@ -220,12 +221,14 @@ const VERSION_FILES: Array<{ file: RegExp; pattern: (v: string) => RegExp; repla
   { file: /^deploy\/.*(Dockerfile|\.ya?ml)$/, pattern: (v) => new RegExp(`(AGENTMEMORY_VERSION[=:]\\s*"?|value:\\s*")${escapeRegex(v)}\\b`, "g"), replace: (v) => `$1${v}` },
   { file: /^src\/version\.ts$/, pattern: (v) => new RegExp(`(VERSION = ")${escapeRegex(v)}(")`), replace: (v) => `$1${v}$2` },
   { file: /^AGENTS\.md$/, pattern: (v) => new RegExp(`(## Current Stats \\(v)${escapeRegex(v)}(\\))`), replace: (v) => `$1${v}$2` },
+  { file: /^packages\/mcp\/package\.json$/, pattern: (v) => new RegExp(`("@agentmemory/agentmemory":\\s*"~?)${escapeRegex(v)}(")`), replace: (v) => `$1${v}$2` },
 ];
 
 function syncVersion(files: Map<string, string>, from: string, to: string): void {
   for (const [path, text] of files) {
-    const rule = VERSION_FILES.find((r) => r.file.test(path));
-    if (rule) files.set(path, text.replace(rule.pattern(from), rule.replace(to)));
+    let next = text;
+    for (const rule of VERSION_FILES.filter((r) => r.file.test(path))) next = next.replace(rule.pattern(from), rule.replace(to));
+    if (next !== text) files.set(path, next);
   }
   const types = files.get("src/types.ts");
   if (types && !types.includes(`"${to}"`)) {
