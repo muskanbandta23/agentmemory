@@ -11,18 +11,39 @@
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> |
-  <a href="READMEs/README.zh-CN.md">简体中文</a> |
-  <a href="READMEs/README.zh-TW.md">繁體中文</a> |
-  <a href="READMEs/README.ja-JP.md">日本語</a> |
-  <a href="READMEs/README.ko-KR.md">한국어</a> |
-  <a href="READMEs/README.es-ES.md">Español</a> |
-  <a href="READMEs/README.tr-TR.md">Türkçe</a> |
-  <a href="READMEs/README.ru-RU.md">Русский</a> |
-  <a href="READMEs/README.hi-IN.md">हिन्दी</a> |
-  <a href="READMEs/README.pt-BR.md">Português</a> |
-  <a href="READMEs/README.fr-FR.md">Français</a> |
-  <a href="READMEs/README.de-DE.md">Deutsch</a>
+  <a href="README.md">🇬🇧 English</a> •
+  <a href="READMEs/README.zh-CN.md">🇨🇳 简体中文</a> •
+  <a href="READMEs/README.zh-TW.md">🇹🇼 繁體中文</a> •
+  <a href="READMEs/README.ja-JP.md">🇯🇵 日本語</a> •
+  <a href="READMEs/README.ko-KR.md">🇰🇷 한국어</a> •
+  <a href="READMEs/README.pt-PT.md">🇵🇹 Português</a> •
+  <a href="READMEs/README.pt-BR.md">🇧🇷 Português (Brasil)</a> •
+  <a href="READMEs/README.es-ES.md">🇪🇸 Español</a> •
+  <a href="READMEs/README.de-DE.md">🇩🇪 Deutsch</a> •
+  <a href="READMEs/README.fr-FR.md">🇫🇷 Français</a> •
+  <a href="READMEs/README.it-IT.md">🇮🇹 Italiano</a> •
+  <a href="READMEs/README.nl-NL.md">🇳🇱 Nederlands</a> •
+  <a href="READMEs/README.pl-PL.md">🇵🇱 Polski</a> •
+  <a href="READMEs/README.cs-CZ.md">🇨🇿 Čeština</a> •
+  <a href="READMEs/README.ro-RO.md">🇷🇴 Română</a> •
+  <a href="READMEs/README.hu-HU.md">🇭🇺 Magyar</a> •
+  <a href="READMEs/README.el-GR.md">🇬🇷 Ελληνικά</a> •
+  <a href="READMEs/README.sv-SE.md">🇸🇪 Svenska</a> •
+  <a href="READMEs/README.da-DK.md">🇩🇰 Dansk</a> •
+  <a href="READMEs/README.nb-NO.md">🇳🇴 Norsk</a> •
+  <a href="READMEs/README.fi-FI.md">🇫🇮 Suomi</a> •
+  <a href="READMEs/README.ru-RU.md">🇷🇺 Русский</a> •
+  <a href="READMEs/README.uk-UA.md">🇺🇦 Українська</a> •
+  <a href="READMEs/README.tr-TR.md">🇹🇷 Türkçe</a> •
+  <a href="READMEs/README.he-IL.md">🇮🇱 עברית</a> •
+  <a href="READMEs/README.ar-SA.md">🇸🇦 العربية</a> •
+  <a href="READMEs/README.hi-IN.md">🇮🇳 हिन्दी</a> •
+  <a href="READMEs/README.bn-BD.md">🇧🇩 বাংলা</a> •
+  <a href="READMEs/README.ur-PK.md">🇵🇰 اردو</a> •
+  <a href="READMEs/README.th-TH.md">🇹🇭 ไทย</a> •
+  <a href="READMEs/README.vi-VN.md">🇻🇳 Tiếng Việt</a> •
+  <a href="READMEs/README.id-ID.md">🇮🇩 Bahasa Indonesia</a> •
+  <a href="READMEs/README.tl-PH.md">🇵🇭 Tagalog</a>
 </p>
 
 <p align="center">
@@ -50,7 +71,7 @@
   <picture><source media="(prefers-color-scheme: dark)" srcset="assets/tags/light/stat-tools.svg"><img src="assets/tags/stat-tools.svg" alt="54 MCP tools" height="38" /></picture>
   <picture><source media="(prefers-color-scheme: dark)" srcset="assets/tags/light/stat-hooks.svg"><img src="assets/tags/stat-hooks.svg" alt="12 auto hooks" height="38" /></picture>
   <picture><source media="(prefers-color-scheme: dark)" srcset="assets/tags/light/stat-deps.svg"><img src="assets/tags/stat-deps.svg" alt="0 external DBs" height="38" /></picture>
-  <picture><source media="(prefers-color-scheme: dark)" srcset="assets/tags/light/stat-tests.svg"><img src="assets/tags/stat-tests.svg" alt="1,674+ tests passing" height="38" /></picture>
+  <picture><source media="(prefers-color-scheme: dark)" srcset="assets/tags/light/stat-tests.svg"><img src="assets/tags/stat-tests.svg" alt="2,500+ tests passing" height="38" /></picture>
 </p>
 
 <p align="center">
@@ -148,99 +169,138 @@ agentmemory works with any agent that supports hooks, MCP, or REST API. All agen
 
 <table>
 <tr>
-<td align="center" width="12.5%">
+<td align="center" width="20%">
 <a href="https://claude.com/product/claude-code"><img src="https://github.com/anthropics.png?size=120" alt="Claude Code" width="48" height="48" /></a><br/>
 <strong>Claude Code</strong><br/>
 <sub>native plugin + 12 hooks + MCP</sub>
 </td>
-<td align="center" width="12.5%">
+<td align="center" width="20%">
 <a href="https://github.com/openai/codex"><img src="https://github.com/openai.png?size=120" alt="Codex CLI" width="48" height="48" /></a><br/>
 <strong>Codex CLI</strong><br/>
 <sub>native plugin + 6 hooks + MCP</sub>
 </td>
-<td align="center" width="12.5%">
-<a href="https://github.com/features/copilot"><img src="https://github.githubassets.com/images/modules/site/copilot/copilot.png" alt="GitHub Copilot CLI" width="48" height="48" /></a><br/>
+<td align="center" width="20%">
+<a href="https://github.com/features/copilot"><picture><source media="(prefers-color-scheme: dark)" srcset="https://svgl.app/library/github_dark.svg"><img src="https://svgl.app/library/github_light.svg" alt="GitHub Copilot CLI" width="48" height="48" /></picture></a><br/>
 <strong>GitHub Copilot CLI</strong><br/>
 <sub>MCP + plugin hooks/skills</sub>
 </td>
-<td align="center" width="12.5%">
+<td align="center" width="20%">
+<a href="https://cursor.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://svgl.app/library/cursor_dark.svg"><img src="https://svgl.app/library/cursor_light.svg" alt="Cursor" width="48" height="48" /></picture></a><br/>
+<strong>Cursor</strong><br/>
+<sub>native plugin + 7 hooks + MCP</sub>
+</td>
+<td align="center" width="20%">
+<a href="plugin/opencode/"><img src="https://raw.githubusercontent.com/rohitg00/agentmemory/main/website/public/opencode.png" alt="OpenCode" width="48" height="48" /></a><br/>
+<strong>OpenCode</strong><br/>
+<sub>capture plugin + MCP</sub>
+</td>
+</tr>
+<tr>
+<td align="center" width="20%">
+<a href="https://devin.ai"><img src="https://raw.githubusercontent.com/rohitg00/agentmemory/main/website/public/devin.png" alt="Devin" width="48" height="48" /></a><br/>
+<strong>Devin</strong><br/>
+<sub>6 hooks + skills + MCP</sub>
+</td>
+<td align="center" width="20%">
 <a href="integrations/openclaw/"><img src="https://github.com/openclaw.png?size=120" alt="OpenClaw" width="48" height="48" /></a><br/>
 <strong>OpenClaw</strong><br/>
 <sub>native plugin + MCP</sub>
 </td>
-<td align="center" width="12.5%">
+<td align="center" width="20%">
 <a href="integrations/hermes/"><img src="https://github.com/NousResearch.png?size=120" alt="Hermes" width="48" height="48" /></a><br/>
 <strong>Hermes</strong><br/>
 <sub>native plugin + MCP</sub>
 </td>
-<td align="center" width="12.5%">
+<td align="center" width="20%">
 <a href="integrations/pi/"><img src="assets/agents/pi.svg" alt="pi" width="48" height="48" /></a><br/>
 <strong>pi</strong><br/>
 <sub>native plugin + MCP</sub>
 </td>
-<td align="center" width="12.5%">
-<a href="https://github.com/tinyhumansai/openhuman"><img src="https://raw.githubusercontent.com/tinyhumansai/openhuman/main/app/src-tauri/icons/128x128.png" alt="OpenHuman" width="48" height="48" /></a><br/>
+<td align="center" width="20%">
+<a href="https://github.com/tinyhumansai/openhuman"><img src="https://github.com/tinyhumansai.png?size=120" alt="OpenHuman" width="48" height="48" /></a><br/>
 <strong>OpenHuman</strong><br/>
 <sub>native Memory trait backend</sub>
 </td>
-<td align="center" width="12.5%">
-<a href="https://cursor.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://svgl.app/library/cursor_dark.svg"><img src="https://svgl.app/library/cursor_light.svg" alt="Cursor" width="48" height="48" /></picture></a><br/>
-<strong>Cursor</strong><br/>
-<sub>native plugin + MCP</sub>
-</td>
-<td align="center" width="12.5%">
+</tr>
+<tr>
+<td align="center" width="20%">
 <a href="https://github.com/google-gemini/gemini-cli"><img src="https://github.com/google-gemini.png?size=120" alt="Gemini CLI" width="48" height="48" /></a><br/>
 <strong>Gemini CLI</strong><br/>
 <sub>MCP server</sub>
 </td>
-</tr>
-<tr>
-<td align="center" width="12.5%">
-<a href="https://github.com/opencode-ai/opencode"><picture><source media="(prefers-color-scheme: dark)" srcset="https://svgl.app/library/opencode-dark.svg"><img src="https://svgl.app/library/opencode.svg" alt="OpenCode" width="48" height="48" /></picture></a><br/>
-<strong>OpenCode</strong><br/>
-<sub>22 hooks + MCP + plugin</sub>
+<td align="center" width="20%">
+<a href="https://antigravity.google"><img src="https://svgl.app/library/antigravity.svg" alt="Antigravity" width="48" height="48" /></a><br/>
+<strong>Antigravity</strong><br/>
+<sub>MCP + hooks</sub>
 </td>
-<td align="center" width="12.5%">
-<a href="https://github.com/cline/cline"><img src="https://github.com/cline.png?size=120" alt="Cline" width="48" height="48" /></a><br/>
-<strong>Cline</strong><br/>
-<sub>MCP server</sub>
-</td>
-<td align="center" width="12.5%">
-<a href="https://github.com/block/goose"><img src="https://github.com/block.png?size=120" alt="Goose" width="48" height="48" /></a><br/>
-<strong>Goose</strong><br/>
-<sub>MCP server</sub>
-</td>
-<td align="center" width="12.5%">
-<a href="https://github.com/Kilo-Org/kilocode"><img src="https://github.com/Kilo-Org.png?size=120" alt="Kilo Code" width="48" height="48" /></a><br/>
-<strong>Kilo Code</strong><br/>
-<sub>MCP server</sub>
-</td>
-<td align="center" width="12.5%">
-<a href="https://github.com/Aider-AI/aider"><img src="https://github.com/Aider-AI.png?size=120" alt="Aider" width="48" height="48" /></a><br/>
-<strong>Aider</strong><br/>
-<sub>REST API</sub>
-</td>
-<td align="center" width="12.5%">
+<td align="center" width="20%">
 <a href="https://claude.ai/download"><img src="https://github.com/anthropics.png?size=120" alt="Claude Desktop" width="48" height="48" /></a><br/>
 <strong>Claude Desktop</strong><br/>
 <sub>MCP server</sub>
 </td>
-<td align="center" width="12.5%">
-<a href="https://devin.ai"><img src="https://raw.githubusercontent.com/rohitg00/agentmemory/main/website/public/devin.png" alt="Devin" width="48" height="48" /></a><br/>
-<strong>Devin</strong><br/>
-<sub>6 hooks + MCP</sub>
+<td align="center" width="20%">
+<a href="https://www.warp.dev"><img src="https://svgl.app/library/warp.svg" alt="Warp" width="48" height="48" /></a><br/>
+<strong>Warp</strong><br/>
+<sub>connect + MCP + skills</sub>
 </td>
-<td align="center" width="12.5%">
-<a href="https://github.com/RooCodeInc/Roo-Code"><img src="https://github.com/RooCodeInc.png?size=120" alt="Roo Code" width="48" height="48" /></a><br/>
-<strong>Roo Code</strong><br/>
+<td align="center" width="20%">
+<a href="https://zed.dev"><picture><source media="(prefers-color-scheme: dark)" srcset="https://svgl.app/library/zed-logo_dark.svg"><img src="https://svgl.app/library/zed-logo.svg" alt="Zed" width="48" height="48" /></picture></a><br/>
+<strong>Zed</strong><br/>
 <sub>MCP server</sub>
 </td>
 </tr>
 <tr>
-<td align="center" width="12.5%">
-<a href="https://www.warp.dev"><img src="https://github.com/warpdotdev.png?size=120" alt="Warp" width="48" height="48" /></a><br/>
-<strong>Warp</strong><br/>
-<sub>connect + MCP + skills</sub>
+<td align="center" width="20%">
+<a href="https://github.com/cline/cline"><img src="https://github.com/cline.png?size=120" alt="Cline" width="48" height="48" /></a><br/>
+<strong>Cline</strong><br/>
+<sub>MCP server</sub>
+</td>
+<td align="center" width="20%">
+<a href="https://continue.dev"><img src="https://github.com/continuedev.png?size=120" alt="Continue" width="48" height="48" /></a><br/>
+<strong>Continue</strong><br/>
+<sub>MCP server</sub>
+</td>
+<td align="center" width="20%">
+<a href="https://docs.factory.ai/cli"><img src="https://www.factory.ai/favicon.svg" alt="Droid" width="48" height="48" /></a><br/>
+<strong>Droid</strong><br/>
+<sub>MCP server</sub>
+</td>
+<td align="center" width="20%">
+<a href="https://kiro.dev"><img src="https://kiro.dev/favicon.ico" alt="Kiro" width="48" height="48" /></a><br/>
+<strong>Kiro</strong><br/>
+<sub>MCP server</sub>
+</td>
+<td align="center" width="20%">
+<a href="https://github.com/QwenLM/qwen-code"><picture><source media="(prefers-color-scheme: dark)" srcset="https://svgl.app/library/qwen_dark.svg"><img src="https://svgl.app/library/qwen_light.svg" alt="Qwen Code" width="48" height="48" /></picture></a><br/>
+<strong>Qwen Code</strong><br/>
+<sub>MCP server</sub>
+</td>
+</tr>
+<tr>
+<td align="center" width="20%">
+<a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://svgl.app/library/deepseek.svg" alt="DeepSeek Harness" width="48" height="48" /></a><br/>
+<strong>DeepSeek Harness</strong><br/>
+<sub>MCP server</sub>
+</td>
+<td align="center" width="20%">
+<a href="https://github.com/RooCodeInc/Roo-Code"><img src="https://github.com/RooCodeInc.png?size=120" alt="Roo Code" width="48" height="48" /></a><br/>
+<strong>Roo Code</strong><br/>
+<sub>MCP server</sub>
+</td>
+<td align="center" width="20%">
+<a href="https://github.com/Kilo-Org/kilocode"><img src="https://github.com/Kilo-Org.png?size=120" alt="Kilo Code" width="48" height="48" /></a><br/>
+<strong>Kilo Code</strong><br/>
+<sub>MCP server</sub>
+</td>
+<td align="center" width="20%">
+<a href="https://github.com/block/goose"><img src="https://github.com/block.png?size=120" alt="Goose" width="48" height="48" /></a><br/>
+<strong>Goose</strong><br/>
+<sub>MCP server</sub>
+</td>
+<td align="center" width="20%">
+<a href="https://github.com/Aider-AI/aider"><img src="https://github.com/Aider-AI.png?size=120" alt="Aider" width="48" height="48" /></a><br/>
+<strong>Aider</strong><br/>
+<sub>REST API</sub>
 </td>
 </tr>
 </table>
@@ -1190,7 +1250,14 @@ cp plugin/opencode/commands/*.md ~/.config/opencode/commands/
 
 <h2 id="real-time-viewer"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/tags/light/section-viewer.svg"><img src="assets/tags/section-viewer.svg" alt="Real-Time Viewer" height="32" /></picture></h2>
 
-Auto-starts on port `3113`. Live observation stream with a stream status indicator, a two-pane session explorer (list beside a sticky detail panel on wide screens), memory and lesson rows that expand to the full stored record including raw JSON and origin provenance, a knowledge graph that clusters nodes by type while relations are sparse, session replay, and a health dashboard.
+Auto-starts on port `3113`. The viewer loads one snapshot when it connects (`GET /agentmemory/viewer/snapshot`) and then applies live stream events: new memories, lessons, observations, audit entries, graph changes and health updates appear without polling or page reloads. The only other requests are the actions you click, "load more" pages and searches. When the stream drops, the viewer shows how old its numbers are, reconnects with backoff and resyncs from one snapshot.
+
+- **12 tabs in four groups** with live counts, deep links (`#memories/<id>`, `#sessions/<id>?obs=<id>`, `#graph/<id>`, `#health/consolidation`), keyboard shortcuts and a mobile menu.
+- **Memories:** server-side search, filters by project, agent and type, a detail panel with the version chain and a word diff, provenance links, copy buttons for the id, the MCP call and a curl command, edit (a new version), forget with confirmation, bulk forget and JSON export.
+- **Sessions:** an inline observation timeline with readable tool input and output, filters and paging, and the memories and lessons each session produced.
+- **Graph:** search, node detail with relations and sources, a legend that does not rely on colour alone, and zoom controls.
+- **Health:** the live version of `GET /agentmemory/status`. Every problem comes with its fix, plus the state backend, index save state, graph provenance compaction progress and a consolidation explainer with the real thresholds.
+- **Audit, Activity, Profile, Replay, Lessons, Actions and Crystals** pages, each with an empty state that says what the section is, why it is empty and the command that fills it, and a `?` glossary tooltip on every term and number.
 
 ```bash
 open http://localhost:3113
@@ -1377,7 +1444,7 @@ fi
 | Prometheus / Grafana | iii OTEL + health monitor |
 | Custom plugin systems | `iii worker add <name>` |
 
-**184 source files · ~42,200 LOC · 1,674 tests · 264 functions · 50 KV scopes**, all on three primitives. No `agentmemory plugin install`. The plugin system is iii itself.
+**219 source files · ~52,000 LOC · 2,500+ tests · 311 functions · 60 KV scopes**, all on three primitives. No `agentmemory plugin install`. The plugin system is iii itself.
 
 ---
 
@@ -1677,6 +1744,36 @@ Create `~/.agentmemory/.env`:
 # CLAUDE_MEMORY_BRIDGE=false
 # SNAPSHOT_ENABLED=false
 
+# Storage and durability
+# AGENTMEMORY_STATE_BACKEND=file           # file (default) or redis; see "Storage backend" below
+# AGENTMEMORY_REDIS_URL=redis://localhost:6379   # Required with redis, plain redis:// only
+# AGENTMEMORY_STATE_SAVE_INTERVAL_MS=2000  # How often the engine writes file state to disk.
+                                           # A hard kill loses at most this window.
+# AGENTMEMORY_INDEX_SAVE_INTERVAL_MS=600000  # Minimum time between search index saves;
+                                             # shutdown and deletes still save at once.
+# AGENTMEMORY_GRAPH_COMPACT_ON_BOOT=true   # One-time background trim of oversized graph
+                                           # provenance; false skips it
+
+# Sessions
+# AGENTMEMORY_SESSION_SWEEP_ENABLED=true   # Hourly sweep marks sessions left active past
+                                           # the threshold as abandoned. Deletes nothing;
+                                           # new activity makes the session active again.
+# AGENTMEMORY_SESSION_SWEEP_STALE_HOURS=24
+
+# Capture filters (hooks)
+# AGENTMEMORY_CAPTURE_ALLOW=               # Comma or space list of tool names or globs;
+                                           # when set, only these tools are captured
+# AGENTMEMORY_CAPTURE_DENY=                # Extra names or globs to skip, added to the
+                                           # defaults: memory_*, toolsearch,
+                                           # listmcpresources, fetchmcpresource
+# AGENTMEMORY_CAPTURE_OUTPUT_MAX=8000      # Max characters of tool output per observation
+# AGENTMEMORY_PRE_COMPACT_BUDGET=1500      # Token budget for PreCompact context; 0 disables
+
+# Audit log
+# AGENTMEMORY_AUDIT_RETENTION_MONTHS=0     # Drop month scopes older than N months; 0 keeps all
+# AGENTMEMORY_AUDIT_INDEX_PERSIST=false    # 1 or true records index migration and cleanup
+                                           # rows (debugging only)
+
 # Team
 # TEAM_ID=
 # USER_ID=
@@ -1710,6 +1807,8 @@ curl -H "Authorization: Bearer $(cat ~/.agentmemory/secret)" http://localhost:31
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/agentmemory/health` | Health check (always public) |
+| `GET` | `/agentmemory/status` | What is wrong and how to fix it (HTML for browsers, JSON otherwise) |
+| `GET` | `/agentmemory/viewer/snapshot` | Everything the viewer shows, in one response |
 | `POST` | `/agentmemory/session/start` | Start session + get context |
 | `POST` | `/agentmemory/session/end` | End session |
 | `POST` | `/agentmemory/observe` | Capture observation (see capture delivery below) |
@@ -1769,7 +1868,7 @@ curl -X POST http://localhost:3111/agentmemory/graph/compact -H "Content-Type: a
 ```bash
 npm run dev               # Hot reload
 npm run build             # Production build
-npm test                  # 1,674 tests
+npm test                  # 2,500+ tests
 npm run test:integration  # API tests (requires running services)
 ```
 
