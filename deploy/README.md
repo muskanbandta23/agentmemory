@@ -50,8 +50,11 @@ exec'ing the agentmemory CLI.
 - Pick **Coolify** if you already run a VPS and want a self-hosted
   control plane — same Docker Compose stack, no third-party host has
   your memories.
+- Pick **ZopDay** if your team already runs in AWS or GCP and wants
+  agentmemory in that account, or if you want a managed pool with no
+  cloud account to connect (ZopCloud).
 
-All four give you the same agentmemory API at the same port (3111)
+All five give you the same agentmemory API at the same port (3111)
 with the same auth model. Migrating between them later is a `tar` of
 `/data` and a re-import — see each platform's README for the exact
 commands.
