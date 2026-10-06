@@ -12,9 +12,10 @@ copied in from `iiidev/iii`, no pre-built agentmemory image required.
 ## What you get
 
 - A public HTTPS endpoint serving the agentmemory REST API on port 3111.
-  ZopDay routes it through the cluster ingress and issues the certificate
-  with cert-manager, so TLS terminates upstream of the container exactly
-  as the other templates assume.
+  TLS terminates upstream of the container either way, as the other
+  templates assume: ZopCloud handles it with its Caddy-based TLS, and an
+  own-cloud deploy terminates at the cluster ingress with a cert-manager
+  certificate.
 - The HMAC bearer secret generated on first boot inside the container and
   persisted to `/data/.hmac` (chmod 600); you copy it from the deploy logs
   once.
@@ -33,9 +34,10 @@ configure yourself — it is not implied by the deploy link.
 
 1. Open the deploy screen:
    <https://zop.dev/zopday/app/deploy?repo=https://github.com/rohitg00/agentmemory&port=3111&name=agentmemory>
-2. Choose **ZopCloud** to have ZopDay run it, or connect an AWS or GCP
-   account to deploy into your own cloud. An own-cloud deploy lands as a
-   standard Helm release on your cluster.
+2. Choose **ZopCloud** — a managed VM pool, no cloud account or cluster
+   to connect — or connect an AWS or GCP account to deploy into your own
+   cloud, where it lands as a standard Helm release on your cluster. The
+   two differ in more than billing; see "Reach the viewer" below.
 3. Set the Dockerfile path to `deploy/zopday/Dockerfile` and the build
    context to `deploy/zopday`. The repository root has no Dockerfile by
    design, so this step is required — the same reason the Render template
@@ -63,11 +65,18 @@ curl https://<your-zopday-url>/agentmemory/livez
 
 ## Reach the viewer
 
-The viewer on 3113 is deliberately not published. Reach it over a port
-forward to the running container, the same pattern the other templates
-document for their platform:
+The viewer on 3113 is deliberately not published, so reaching it depends
+on the target you deployed to.
+
+**Own cloud (Kubernetes).** Port-forward to the running pod, the same
+pattern the other templates document for their platform:
 
 ```bash
 kubectl port-forward deploy/agentmemory 3113:3113
 # then open http://localhost:3113
 ```
+
+**ZopCloud.** There is no cluster of yours to port-forward into —
+ZopCloud is a managed VM pool ZopDev operates, and only 3111 is
+published. The viewer is not reachable there. Deploy to your own cloud
+if you need it.
