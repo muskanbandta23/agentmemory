@@ -4,29 +4,6 @@ import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
 
-/**
- * agentmemory-capture for OpenCode — V1 and V2 in one file.
- *
- * OpenCode V2 no longer runs the V1 `Hooks`-object plugin shape: the default
- * export must carry an `id` plus a `setup(ctx)`, and hooks are registered on
- * the domain that owns the operation. This file default-exports both, so it
- * keeps working across the V1 -> V2 transition:
- *
- *   - V1 calls `server()` and uses the returned hooks.
- *   - V2 reads `id` and `setup()` and ignores `server()`.
- *
- * The two implementations are deliberately kept separate. Sharing an export
- * does not translate V1 hooks into V2 hooks, and the hook payloads differ
- * enough (see README.md) that a shared core would be a lie about coverage.
- *
- * The V1 body below is unchanged and remains the full 22-hook implementation,
- * including `config` and `chat.params`. The V2 body carries only the hooks
- * that have a faithful V2 equivalent.
- *
- * `@opencode/plugin` is deliberately not imported: the loader only requires
- * `id` plus `setup`, so this file needs no V2 SDK dependency to be installed.
- */
-
 const API = process.env.AGENTMEMORY_URL || "http://localhost:3111";
 // OpenCode reports tool names in lowercase ("read", "edit", ...); matching is
 // case-insensitive at the call site so a future casing change cannot silently
@@ -285,10 +262,6 @@ function extractErrorMessage(err: unknown): string {
   }
   return String(err ?? "");
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// V1 implementation — unchanged from the original plugin
-// ═══════════════════════════════════════════════════════════════════════════
 
 const v1Hooks: Plugin = async (ctx) => {
   defaultProjectCwd = ctx.worktree || ctx.project?.id || process.cwd();
@@ -824,6 +797,9 @@ const v1Hooks: Plugin = async (ctx) => {
 };
 
 async function v2Setup(ctx: any) {
+  if (typeof ctx?.tool?.hook !== "function" || typeof ctx?.session?.hook !== "function" || typeof ctx?.event?.subscribe !== "function") {
+    return;
+  }
   const location = ctx.location;
   defaultProjectCwd = location?.directory ?? location?.project?.directory ?? process.cwd();
   defaultProjectName = resolveProjectName(defaultProjectCwd);
@@ -856,6 +832,8 @@ async function v2Setup(ctx: any) {
     return arr.map((x: any) => (typeof x === "string" ? x : x?.id ?? x?.name)).filter(Boolean);
   }
 
+  let lastConfigSnapshot: string | null = null;
+
   async function snapshotConfig(): Promise<void> {
     const [agents, providers, mcp, modelDefault] = await Promise.all([
       ctx.agent?.list?.().catch(() => null),
@@ -872,6 +850,9 @@ async function v2Setup(ctx: any) {
       model_limits: model?.limit ?? null,
       location: defaultProjectCwd,
     };
+    const snapshot = JSON.stringify(payload);
+    if (snapshot === lastConfigSnapshot) return;
+    lastConfigSnapshot = snapshot;
     if (activeSessionId) await observeV2(activeSessionId, "config_loaded", payload);
     else pendingConfig = payload;
   }
@@ -1115,7 +1096,6 @@ async function v2Setup(ctx: any) {
         return;
       }
 
-      case "session.reasoning.started":
       case "session.reasoning.ended": {
         if (!sid0) return;
         await observeV2(sid0, "reasoning", {
@@ -1127,16 +1107,29 @@ async function v2Setup(ctx: any) {
 
       case "session.instructions.updated": {
         if (!sid0) return;
+        const sources = data.delta && typeof data.delta === "object" ? Object.keys(data.delta) : [];
+        if (sources.length === 0) return;
         await observeV2(sid0, "notification", {
           notification_type: "instructions_updated",
-          text: safeSlice(data.text, 4000),
+          sources: sources.slice(0, 50),
         });
         return;
       }
 
-      case "session.inbox.delivered": {
+      case "session.text.ended": {
         if (!sid0) return;
-        await observeV2(sid0, "prompt_delivered", { inboxID: (data.inboxID as string) ?? null });
+        const text = typeof data.text === "string" ? data.text : "";
+        if (!text) return;
+        await observeV2(sid0, "assistant_message", {
+          messageID: (data.assistantMessageID as string) ?? null,
+          text: text.slice(0, 8000),
+        });
+        return;
+      }
+
+      case "session.execution.succeeded": {
+        if (!sid0) return;
+        await post("/summarize", { sessionId: sid0 });
         return;
       }
 
@@ -1145,11 +1138,6 @@ async function v2Setup(ctx: any) {
         const shellSid = (info.metadata?.sessionID as string) || sid0;
         if (!shellSid) return;
         if (info.id) shellSessions.set(String(info.id), shellSid);
-        await observeV2(shellSid, "command_executed", {
-          name: (info.shell as string) ?? null,
-          arguments: safeSlice(info.command, 2000),
-          cwd: (info.cwd as string) ?? null,
-        });
         return;
       }
 

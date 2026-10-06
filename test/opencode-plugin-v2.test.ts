@@ -1,17 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
 import { resolve } from "node:path";
-// Drives the V2 plugin path with payloads captured from OpenCode v2.0.22
-// rather than hand-built objects, which is how the original port shipped dead:
-// it read `event.properties` (always `{}` on V2) and every handler returned at
-// its guard, while the suite passed because the fake context agreed with the
-// assumptions that produced it.
-//
-// What this covers: every event handler, the dedup paths, and the failures
-// that are awkward to provoke by hand (server down at `/session/start`).
-// What it does not cover: a live OpenCode process. A registered hook is not
-// evidence that it fires, which is exactly how the compaction hook passed
-// unnoticed, so the runtime observations behind this file are listed in the
-// plugin README under Verification.
 const PLUGIN = resolve(__dirname, "../plugin/opencode/agentmemory-capture.ts");
 const SID = "ses_test";
 type Sent = { path: string; hook: string; body: any };
@@ -55,9 +43,6 @@ async function harness(): Promise<Harness> {
     });
   });
   vi.stubGlobal("fetch", fetchMock);
-  // Queue, not a bare resolver: resolving without queueing drops the event if
-  // the loop is still busy, and queueing while a waiter is pending delivers it
-  // twice.
   const queue: any[] = [];
   let waiter: ((r: any) => void) | null = null;
   let done = false;
@@ -101,19 +86,7 @@ async function harness(): Promise<Harness> {
     },
   };
   const cleanup = await def.setup(ctx);
-  // The setup-time snapshot is fire-and-forget and, with no session yet, only
-  // parks `pendingConfig`. Let it land so the first event flushes it rather
-  // than racing it.
   await new Promise((r) => setTimeout(r, 30));
-  // Drains the plugin's pending work before asserting.
-    //
-    // The plugin owns an async iterator: pushing an event only resolves its
-    // `next()`, and the `/session/start` round-trip plus the following
-    // `/observe` are awaited inside `handleEvent`. Waiting on one call while
-    // asserting another races the gap between them - an earlier draft of this
-    // file asserted `session_started` right after `session/start` appeared and
-    // saw an empty array. So every assertion drains first and then reads only
-    // what it asserts on.
     return {
     observed,
     posts,
@@ -129,7 +102,6 @@ async function harness(): Promise<Harness> {
     fireTool: async (name, ev) => {
       for (const f of toolHooks[name] ?? []) await f(ev);
     },
-    /** Lets every awaited call the plugin issued after the last push land. */
     drain: (ms = 150) => new Promise((r) => setTimeout(r, ms)),
     cleanup: async () => {
       await cleanup?.();
@@ -287,9 +259,6 @@ describe("OpenCode V2 capture — hooks", () => {
       sizes.push(ev.system.length);
     }
     expect(sizes).toEqual([3, 2, 2]);
-    // At most one /context for the three model calls. The recalled set does not
-    // change within a prompt, so it is fetched once and reused; a new prompt
-    // clears it. `sizes` above is what shows memory still lands on every call.
     expect(h.posts.filter((p) => p === "context").length).toBeLessThanOrEqual(1);
     await h.cleanup();
   });
@@ -341,14 +310,15 @@ describe("OpenCode V2 capture — compactacao por eventos", () => {
     expect(String(ev.body.data.tool_output)).toContain("falhou");
     await h.cleanup();
   });
-  it("session.execution.succeeded nao gera ruido: so traz sessionID", async () => {
+  it("session.execution.succeeded pede /summarize sem gerar observation", async () => {
     const h = await harness();
     h.push({ type: "session.execution.started", data: { sessionID: SID }, id: "e", location: {}, created: 1 });
     await h.drain();
     const before = h.observed.length;
     h.push({ type: "session.execution.succeeded", data: { sessionID: SID }, id: "es", location: {}, created: 2 });
-    await new Promise((r) => setTimeout(r, 60));
+    await h.drain();
     expect(h.observed.length).toBe(before);
+    expect(h.posts.filter((p) => p === "summarize").length).toBe(1);
     await h.cleanup();
   });
 });
@@ -358,8 +328,8 @@ describe("OpenCode V2 capture — eventos do stream", () => {
     ["session.step.ended", { sessionID: SID, assistantMessageID: "m", cost: 0.1, rawFinish: "stop", tokens: { input: 1, output: 2, reasoning: 0, cache: { read: 3, write: 0 } } }, "step_finish"],
     ["session.agent.selected", { sessionID: SID, agent: "build", previous: "plan" }, "agent_selected"],
     ["session.reasoning.ended", { sessionID: SID, assistantMessageID: "m", ordinal: 0, text: "pensando" }, "reasoning"],
-    ["session.instructions.updated", { sessionID: SID, text: "instr", delta: {} }, "notification"],
-    ["session.inbox.delivered", { sessionID: SID, inboxID: "i1" }, "prompt_delivered"],
+    ["session.instructions.updated", { sessionID: SID, delta: { "core/date": "5c8d" } }, "notification"],
+    ["session.text.ended", { sessionID: SID, assistantMessageID: "m", ordinal: 0, text: "resposta final" }, "assistant_message"],
     ["permission.asked", { sessionID: SID, action: "bash", resources: ["rm"], tool: { callID: "c1" } }, "notification"],
     ["permission.replied", { sessionID: SID, requestID: "r1", reply: "once" }, "permission_replied"],
     ["session.execution.failed", { sessionID: SID, error: { message: "boom" } }, "post_tool_failure"],
@@ -375,12 +345,53 @@ describe("OpenCode V2 capture — eventos do stream", () => {
       await h.cleanup();
     });
   }
-  it("shell.created produz command_executed", async () => {
+  const silent: Array<[string, any]> = [
+    ["session.reasoning.started", { sessionID: SID, assistantMessageID: "m", ordinal: 0, state: "streaming" }],
+    ["session.inbox.delivered", { sessionID: SID, inboxID: "i1" }],
+    ["shell.created", { info: { command: "git status", cwd: "C:/r", id: "sh1", metadata: { sessionID: SID }, shell: "pwsh", status: "running", time: { started: 1 } } }],
+  ];
+  for (const [type, data] of silent) {
+    it(`${type} nao gera observation`, async () => {
+      const h = await harness();
+      h.push({ type: "session.execution.started", data: { sessionID: SID }, id: "e", location: {}, created: 1 });
+      await h.drain();
+      const before = h.observed.length;
+      h.push({ type, data, id: "x", location: {}, created: 2 });
+      await h.drain();
+      expect(h.observed.length).toBe(before);
+      await h.cleanup();
+    });
+  }
+  it("session.instructions.updated grava as fontes alteradas, nao os hashes", async () => {
     const h = await harness();
     h.push({ type: "session.execution.started", data: { sessionID: SID }, id: "e", location: {}, created: 1 });
     await h.drain();
-    h.push({ type: "shell.created", data: { info: { command: "git status", cwd: "C:/r", id: "sh1", metadata: { sessionID: SID }, shell: "pwsh", status: "running", time: { started: 1 } } }, id: "sc", location: {}, created: 2 });
+    h.push({ type: "session.instructions.updated", data: { sessionID: SID, delta: { "core/codemode": "3a6c", "core/date": "5c8d" } }, id: "iu", location: {}, created: 2 });
     await h.drain();
+    const ev = h.observed.find((o) => o.hook === "notification");
+    expect(ev?.body.data.sources).toEqual(["core/codemode", "core/date"]);
+    expect(JSON.stringify(ev?.body.data)).not.toContain("3a6c");
+    await h.cleanup();
+  });
+  it("session.instructions.updated sem fontes nao gera observation", async () => {
+    const h = await harness();
+    h.push({ type: "session.execution.started", data: { sessionID: SID }, id: "e", location: {}, created: 1 });
+    await h.drain();
+    const before = h.observed.length;
+    h.push({ type: "session.instructions.updated", data: { sessionID: SID, delta: {} }, id: "iu", location: {}, created: 2 });
+    await h.drain();
+    expect(h.observed.length).toBe(before);
+    await h.cleanup();
+  });
+  it("session.text.ended grava a resposta do assistente", async () => {
+    const h = await harness();
+    h.push({ type: "session.execution.started", data: { sessionID: SID }, id: "e", location: {}, created: 1 });
+    await h.drain();
+    h.push({ type: "session.text.ended", data: { sessionID: SID, assistantMessageID: "m1", ordinal: 0, text: "refresh devolve null" }, id: "te", location: {}, created: 2 });
+    await h.drain();
+    const ev = h.observed.find((o) => o.hook === "assistant_message");
+    expect(ev?.body.data.text).toBe("refresh devolve null");
+    expect(ev?.body.data.messageID).toBe("m1");
     await h.cleanup();
   });
   it("session.deleted fecha a sessao e libera as chaves", async () => {
@@ -400,6 +411,7 @@ describe("OpenCode V2 capture — eventos do stream", () => {
     const before = hooksOf(h)("config_loaded");
     h.push({ type: "model.updated", data: {}, id: "mu", location: {}, created: 2 });
     await h.drain();
+    expect(hooksOf(h)("config_loaded")).toBe(before);
     await h.cleanup();
   });
 });
@@ -408,7 +420,6 @@ describe("OpenCode V2 capture — resiliência", () => {
     const h = await harness();
     h.push({ type: "session.execution.started", data: { sessionID: SID }, id: "e", location: {}, created: 1 });
     await h.drain();
-    // A guard `return` inside the for-await used to kill the subscription here.
     h.push({ type: "message.updated", data: {}, id: "u1", location: {}, created: 2 });
     h.push({ type: "evento.inventado", data: {}, id: "u2", location: {}, created: 3 });
     await new Promise((r) => setTimeout(r, 40));
@@ -428,6 +439,16 @@ describe("plugin/opencode — forma do export", () => {
     expect(typeof mod.default.setup).toBe("function");
     expect(typeof mod.default.server).toBe("function");
     expect(typeof mod.AgentmemoryCapturePlugin).toBe("function");
+  });
+  it("setup nao faz nada num contexto V1 sem tool, session e event", async () => {
+    const fetchMock = vi.fn(async () => new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const def = await loadPlugin();
+    const v1ctx = { options: {}, agent: { list: async () => ({ data: [{ id: "build" }] }) }, catalog: {}, command: {}, skill: {} };
+    await expect(def.setup(v1ctx)).resolves.toBeUndefined();
+    await new Promise((r) => setTimeout(r, 30));
+    expect(fetchMock).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
   it("o caminho V1 continua devolvendo os 7 hooks", async () => {
     const mod: any = await import(PLUGIN);
